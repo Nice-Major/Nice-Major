@@ -1,6 +1,6 @@
 - 👋 Hi, I’m @Nice-Major.
-- 👀 I’m interested in Web Development.
-- 🌱 I’m currently learning Backend Web Development with Python3 (Django).
+- 👀 I’m interested in Web Development and Cloud Computing with Google Cloud Platform
+- 🌱 I’m currently learning Backend Web Development with Python3 (Django) and Cloud Administration with Google Cloud Platform.
 - 💞️ I’m looking to collaborate on Cloud Computing and Website Development.
 - 📫 How to reach me Mail: aniekwevictor9@gmail.com
 
