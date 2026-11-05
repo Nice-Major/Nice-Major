@@ -1,0 +1,52 @@
+{
+  "candidate": {
+    "name": "John Victor Aniekwe",
+    "email": "aniekwevictor9@gmail.com",
+    "phone": "+234 816 484 1085",
+    "location": "Lagos, Nigeria (UTC+1 / CET Synchronous)",
+    "linkedin": "https://www.linkedin.com/in/victor-aniekwe",
+    "portfolioUrl": "https://victor-aniekwe.github.io",
+    "certifications": [
+      { "name": "Kubernetes and Cloud Native Associate (KCNA)", "issuer": "The Linux Foundation / CNCF" },
+      { "name": "AWS Certified Solutions Architect – Associate", "issuer": "Amazon Web Services" },
+      { "name": "AWS Certified Developer – Associate", "issuer": "Amazon Web Services" },
+      { "name": "AWS Certified Cloud Practitioner", "issuer": "Amazon Web Services" }
+    ]
+  },
+  "skillsMatrix": [
+    { "category": "AI & Machine Learning Integration", "items": ["Azure OpenAI", "GitHub Copilot Enterprise", "Microsoft Copilot (DfM/TsG Integration)", "AI-Driven Observability", "Predictive ML Pipelines"] },
+    { "category": "Containers & Orchestration", "items": ["Docker", "Kubernetes (KCNA)", "Amazon EKS", "Azure AKS", "Pods & Nodes Lifecycle"] },
+    { "category": "CI/CD & Automation", "items": ["AI-Assisted CI/CD", "Terraform", "ARM/Bicep", "GitHub Actions", "API Integrations (ClickUp)"] }
+  ],
+  "experience": [
+    {
+      "company": "GVOC",
+      "location": "Remote, United Kingdom",
+      "period": "December 2025 – Present",
+      "titles": {
+        "devops": "Senior DevOps & AI Platform Engineer",
+        "architect": "Cloud Solutions & AI Architect"
+      },
+      "bullets": [
+        { "text": "Architected and deployed Azure OpenAI services alongside containerized application workloads (Pods/Nodes) to power an AI-driven prediction platform, achieving a >60% prediction success rate.", "tags": ["devops", "architect"] },
+        { "text": "Leveraged GitHub Copilot Enterprise to design and provision secure, scalable CI/CD pipelines and Infrastructure as Code (IaC), optimizing compute, networking, security, identity, and storage.", "tags": ["devops", "architect"] },
+        { "text": "Engineered AI-assisted observability and monitoring frameworks using Copilot Enterprise to proactively resolve architectural bottlenecks and support upcoming Machine Learning prediction engines.", "tags": ["devops", "architect"] },
+        { "text": "Automated agile project management workflows by developing AI-driven API integrations with ClickUp, dynamically updating boards and task statuses.", "tags": ["devops"] }
+      ]
+    },
+    {
+      "company": "TEKNOWLEDGE",
+      "location": "Victoria Island, Lagos, Nigeria",
+      "period": "October 2021 – November 2025",
+      "titles": {
+        "support": "L3 Cloud Application Support & AI Systems Engineer",
+        "infra": "Cloud Infrastructure & Escalation Systems Engineer (L3)"
+      },
+      "bullets": [
+        { "text": "Served as the L3 Escalation Point for enterprise cloud customers, diagnosing critical infrastructure and networking bottlenecks with a 99% first-day issue resolution rate and 99.9% uptime SLA.", "tags": ["support", "infra"] },
+        { "text": "Integrated Microsoft Copilot into Diagnostic frameworks (DfM), indexing Troubleshooting Guides (TsG) and internal wikis to accelerate complex L3 issue resolution and enhance Customer Satisfaction (CSAT).", "tags": ["support", "infra"] },
+        { "text": "Architected automated CI/CD deployment workflows and reusable IaC provisioning scripts, reducing environment setup and recovery times from hours to under 15 minutes.", "tags": ["devops", "infra"] }
+      ]
+    }
+  ]
+}
