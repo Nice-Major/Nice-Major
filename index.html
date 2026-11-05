@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>John Victor Aniekwe | AI-Augmented Platform Engineer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root { --primary: #1A73E8; --dark: #111827; --muted: #4B5563; --light-bg: #F9FAFB; --border: #E5E7EB; }
+    * { 
+      box-sizing: border-box; 
+      /* Critical ATS fix: prevents "ff", "fi" from merging into broken glyphs in PDFs */
+      font-variant-ligatures: none; 
+      -webkit-font-variant-ligatures: none; 
+    }
+    body { margin: 0; font-family: 'Inter', Arial, sans-serif; color: var(--dark); background: #F3F4F6; line-height: 1.5; font-size: 14px; }
+    
+    /* Web-Only Control Bar */
+    .control-bar { background: var(--dark); color: #fff; padding: 12px 24px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; }
+    .filter-btn { background: #1F2937; color: #E5E7EB; border: 1px solid #374151; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 12px; margin-right: 6px; }
+    .filter-btn.active, .filter-btn:hover { background: var(--primary); color: #fff; border-color: var(--primary); }
+    .action-btn { background: #10B981; color: #fff; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+    
+    /* Document Container */
+    .page-container { max-width: 900px; margin: 24px auto; background: #fff; padding: 40px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+    header { border-bottom: 2px solid var(--primary); padding-bottom: 16px; margin-bottom: 20px; }
+    h1 { margin: 0 0 4px 0; font-size: 24px; font-weight: 700; letter-spacing: -0.5px; }
+    .headline { font-size: 15px; font-weight: 600; color: var(--primary); margin-bottom: 8px; }
+    .contact-bar { font-size: 13px; color: var(--muted); }
+    .contact-bar a { color: var(--primary); text-decoration: none; }
+    
+    h2 { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border); padding-bottom: 4px; margin: 24px 0 12px 0; }
+    .job-block { margin-bottom: 16px; page-break-inside: avoid; }
+    .job-header { display: flex; justify-content: space-between; font-weight: 600; font-size: 14px; margin-bottom: 4px; }
+    .job-meta { font-size: 12.5px; color: var(--muted); font-weight: 500; }
+    ul { margin: 0; padding-left: 20px; }
+    li { margin-bottom: 6px; font-size: 13px; color: #1F2937; }
+    .skill-row { font-size: 13px; margin-bottom: 6px; }
+    
+    /* Strict PDF Print CSS */
+    @media print {
+      @page { size: A4; margin: 12mm 15mm; }
+      body { background: #fff; font-size: 10pt; }
+      .no-print { display: none !important; }
+      .page-container { margin: 0; padding: 0; box-shadow: none; max-width: 100%; }
+      h1 { font-size: 18pt; }
+      .headline { font-size: 11pt; }
+      h2 { font-size: 10.5pt; margin-top: 12pt; }
+      li, .skill-row { font-size: 9.5pt; line-height: 1.35; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="control-bar no-print">
+    <div>
+      <button class="filter-btn active" onclick="applyFilter('devops')">DevOps & AI Lens</button>
+      <button class="filter-btn" onclick="applyFilter('architect')">Cloud Architect Lens</button>
+      <button class="filter-btn" onclick="applyFilter('support')">L3 Support Lens</button>
+    </div>
+    <button class="action-btn" onclick="window.print()">⬇ Download Tailored ATS PDF</button>
+  </div>
+
+  <main class="page-container">
+    <header>
+      <h1 id="c-name">Loading...</h1>
+      <div class="headline" id="c-headline">AI-Augmented Cloud Platform Engineer</div>
+      <div class="contact-bar" id="c-contact"></div>
+    </header>
+
+    <section>
+      <h2>Core Technical Competencies</h2>
+      <div id="skills-container"></div>
+    </section>
+
+    <section>
+      <h2>Professional Experience</h2>
+      <div id="experience-container"></div>
+    </section>
+
+    <section>
+      <h2>Education & Certifications</h2>
+      <div id="certs-container" style="font-size: 13px; margin-bottom: 8px;"></div>
+      <div style="font-size: 13px;"><strong>B.Sc. in Computer Science</strong> — University of Nigeria (2014 – 2018)</div>
+    </section>
+  </main>
+
+  <script>
+    let profileData = {};
+    
+    async function loadData() {
+      try {
+        const response = await fetch('./profile-data.json');
+        profileData = await response.json();
+        
+        // Populate Header
+        document.getElementById('c-name').textContent = profileData.candidate.name;
+        document.getElementById('c-contact').innerHTML = `
+          ${profileData.candidate.location} | 
+          <a href="mailto:${profileData.candidate.email}">${profileData.candidate.email}</a> | 
+          ${profileData.candidate.phone} | 
+          <a href="${profileData.candidate.linkedin}" target="_blank">LinkedIn</a> |
+          <a href="${profileData.candidate.portfolioUrl}">Portfolio Source</a>
+        `;
+        
+        // Check URL for ?role= parameter, default to devops
+        const urlParams = new URLSearchParams(window.location.search);
+        const role = urlParams.get('role') || 'devops';
+        applyFilter(role);
+      } catch (err) {
+        console.error("Error loading JSON:", err);
+      }
+    }
+
+    function applyFilter(role) {
+      if(!profileData.experience) return;
+      
+      // Render Skills
+      const skillsHtml = profileData.skillsMatrix.map(s => 
+        `<div class="skill-row"><strong>${s.category}:</strong> ${s.items.join(', ')}</div>`
+      ).join('');
+      document.getElementById('skills-container').innerHTML = skillsHtml;
+
+      // Render Experience based on active role lens
+      const expHtml = profileData.experience.map(job => {
+        const title = job.titles[role] || job.titles.devops || job.titles.support;
+        // Filter bullets based on tags
+        const bullets = job.bullets.filter(b => b.tags.includes(role))
+                                   .map(b => `<li>${b.text}</li>`).join('');
+        return `
+          <div class="job-block">
+            <div class="job-header">
+              <span>${title} — <span style="color: var(--primary)">${job.company}</span></span>
+              <span class="job-meta">${job.location} | ${job.period}</span>
+            </div>
+            <ul>${bullets}</ul>
+          </div>
+        `;
+      }).join('');
+      document.getElementById('experience-container').innerHTML = expHtml;
+
+      // Render Certs
+      const certsHtml = profileData.candidate.certifications.map(c => 
+        `<div>• <strong>${c.name}</strong> (${c.issuer})</div>`
+      ).join('');
+      document.getElementById('certs-container').innerHTML = certsHtml;
+    }
+
+    window.onload = loadData;
+  </script>
+</body>
+</html>
