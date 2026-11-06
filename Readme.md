@@ -1,109 +1,47 @@
-# 👋 Hi, I'm John Victor Aniekwe (@Nice-Major)
+# John Victor Aniekwe — AI-Augmented Cloud, DevSecOps & Platform Engineering Hub
 
-## 🚀 Infrastructure & Cloud Engineer | DevOps Specialist
-
-I'm a DevOps Engineer with 5+ years of experience building and managing scalable cloud infrastructure on **AWS** and **Azure**. I specialize in automating Infrastructure and Application deployments, optimizing cloud costs, and ensuring high availability for enterprise systems.
-
-### 🔭 What I Do
-
-- 🏗️ Design and manage cloud infrastructure using **Infrastructure as Code** (Terraform, ARM/Bicep)
-- 🔄 Build and maintain **CI/CD pipelines** for automated deployments (Azure DevOps, GitHub Actions)
-- 📦 Deploy and orchestrate containerized applications with **Docker** and **Kubernetes**
-- 📊 Implement comprehensive **monitoring and alerting** systems (Azure Monitor, CloudWatch)
-- 🔒 Enforce security best practices and compliance across cloud environments
-- 💰 Optimize cloud costs while maintaining performance and reliability
-
-### 🛠️ Tech Stack
-
-**Cloud Platforms:**  
-![AWS](https://img.shields.io/badge/AWS-232F3E?style=flat&logo=amazon-aws&logoColor=white)
-![Azure](https://img.shields.io/badge/Azure-0078D4?style=flat&logo=microsoft-azure&logoColor=white)
-
-**Infrastructure & Automation:**  
-![Terraform](https://img.shields.io/badge/Terraform-7B42BC?style=flat&logo=terraform&logoColor=white)
-![Docker](https://img.shields.io/badge/Docker-2496ED?style=flat&logo=docker&logoColor=white)
-![Kubernetes](https://img.shields.io/badge/Kubernetes-326CE5?style=flat&logo=kubernetes&logoColor=white)
-
-**CI/CD:**  
-![GitHub Actions](https://img.shields.io/badge/GitHub_Actions-2088FF?style=flat&logo=github-actions&logoColor=white)
-![Azure DevOps](https://img.shields.io/badge/Azure_DevOps-0078D7?style=flat&logo=azure-devops&logoColor=white)
-
-**Scripting & Programming:**  
-![Bash](https://img.shields.io/badge/Bash-4EAA25?style=flat&logo=gnu-bash&logoColor=white)
-![PowerShell](https://img.shields.io/badge/PowerShell-5391FE?style=flat&logo=powershell&logoColor=white)
-![Python](https://img.shields.io/badge/Python-3776AB?style=flat&logo=python&logoColor=white)
-
-**Operating Systems:**  
-![Linux](https://img.shields.io/badge/Linux-FCC624?style=flat&logo=linux&logoColor=black)
-![Windows Server](https://img.shields.io/badge/Windows_Server-0078D6?style=flat&logo=windows&logoColor=white)
-
-### 🌱 Currently Learning
-
-- Advanced Kubernetes patterns and service mesh architectures
-- GitOps practices with ArgoCD and Flux
-- AWS Professional-level certifications
-- Infrastructure security and zero-trust architectures
-
-### 💼 Professional Experience
-
-**DevOps Engineer / Platform Architect** @ GVOC (Remote, UK) - *Dec 2025 - Present*
-- Design and implement scalable cloud infrastructure for data-driven applications
-- Architect CI/CD pipelines enabling continuous integration and delivery
-- Manage Infrastructure as Code for consistent environment provisioning
-
-**Technical Cloud Application Support Engineer** @ Teknowledge (Lagos) - *Oct 2021 - Nov 2025*
-- Maintained 99.9% uptime for 50+ enterprise Azure customers
-- Automated infrastructure provisioning reducing deployment time from hours to minutes
-- Implemented comprehensive monitoring and alerting frameworks
-
-### 📜 Certifications
-
-- ☁️ AWS Certified Solutions Architect – Associate
-- ☁️ AWS Certified Developer – Associate
-- ☁️ AWS Certified Cloud Practitioner
-- ⎈ Kubernetes and Cloud Native Associate (KCNA)
-
-### 🔍 I'm Interested In
-
-- Cloud-native application architecture and deployment
-- Infrastructure automation and DevOps best practices
-- Site reliability engineering and observability
-- Cost optimization strategies for cloud infrastructure
-- Open-source DevOps and cloud-native tools
-
-### 🤝 Let's Collaborate
-
-I'm open to collaborating on:
-- 🌐 Cloud infrastructure projects (AWS, Azure, GCP)
-- 🔧 DevOps tooling and automation
-- 📦 Containerization and orchestration solutions
-- 🔒 Infrastructure security and compliance
-- 📚 Open-source projects related to cloud-native computing
-
-### 📫 How to Reach Me
-
-- 📧 Email: [aniekwevictor9@gmail.com](mailto:aniekwevictor9@gmail.com)
-- 💼 LinkedIn: [victor-aniekwe](https://linkedin.com/in/victor-aniekwe)
-- 📍 Location: Lagos, Nigeria
-
-### 📊 GitHub Stats
-
-![Top Languages](https://github-readme-stats.vercel.app/api/top-langs/?username=Nice-Major&layout=compact&theme=dark&hide_border=true)
-
-### 💡 Fun Facts
-
-- 🎯 Systematic problem-solving and translating Business requirements into solution
-- ⚡ Reduced cloud infrastructure costs by implementing auto-scaling and resource optimization
-- 🌍 Work across multiple time zones supporting global enterprise customers
-- 📖 Continuous learner: Always exploring new cloud technologies and DevOps practices
+> **Canonical Web Portfolio & Multi-Category CV Studio:** [`https://nice-major.github.io/Nice-Major/`](https://nice-major.github.io/Nice-Major/)  
+> **Location & Time Zone:** Lagos, Nigeria (`UTC+1 / CET Synchronous`)  
+> **Contact:** `aniekwevictor9@gmail.com` | `+234 813 000 4114` | [LinkedIn: victor-aniekwe](https://www.linkedin.com/in/victor-aniekwe)  
+> **Corporate B2B Entity:** **Stepcon Solutions** (`Nigerian CAC Registration: RC - 8284984`)
 
 ---
 
-💬 *"Automating infrastructure so developers can focus on building great products"*
+## Executive Snapshot (Single Source of Truth)
 
-⭐️ From [Nice-Major](https://github.com/Nice-Major)
+Delivery-oriented **DevOps, Cloud Solutions Architect, and L3 Platform Engineer** with **5+ years of production experience** designing, automating, and securing high-availability Linux and hybrid cloud environments across **AWS** and **Microsoft Azure**.
 
-<!---
-Nice-Major/Nice-Major is a ✨ special ✨ repository because its `README.md` (this file) appears on your GitHub profile.
-You can click the Preview link to take a look at your changes.
---->
+| Verified Engineering Metric | Production Proof & Impact |
+| :--- | :--- |
+| **99.9% Infrastructure Uptime SLA** | Sustained across enterprise Microsoft Azure & AWS compute, storage, and hybrid network estates. |
+| **99% First-Day L3 Resolution** | Achieved as L3 Escalation Lead for Azure App Service (Dev & OSS) via deep log/metric/trace RCA and **Microsoft Copilot in DfM** (indexed with TsG & internal wikis). |
+| **>60% AI Prediction Accuracy** | Architected and deployed **Azure OpenAI** microservices alongside containerized workloads on Kubernetes pods/nodes at GVOC to power an AI football prediction & storytelling engine. |
+| **Hours-to-Minutes (<15 Min) Provisioning** | Built reusable **Terraform**, **ARM/Bicep**, and **GitHub Copilot Enterprise**-accelerated CI/CD pipelines plus AI-driven **ClickUp REST API** board automations. |
+
+---
+
+## Live Category-Specific CV & Portfolio Views
+
+Click any lens below to open the pre-filtered Web Portfolio and export a 1–2 page ATS-compliant PDF (`John_Victor_Aniekwe_[Role]_CV.pdf`):
+
+1. **[Dev(Sec)Ops & AI Platform Engineer View (`?role=devops`)](https://nice-major.github.io/Nice-Major/?role=devops)**
+2. **[Cloud Solutions Architect & Multi-Cloud View (`?role=architect`)](https://nice-major.github.io/Nice-Major/?role=architect)**
+3. **[Cloud Infrastructure & Linux System Administrator View (`?role=infra`)](https://nice-major.github.io/Nice-Major/?role=infra)**
+4. **[L3 Technical Cloud Support & IT Specialist View (`?role=support`)](https://nice-major.github.io/Nice-Major/?role=support)**
+
+---
+
+## Verified Certifications (Zero External Tracker Links)
+
+* **Kubernetes and Cloud Native Associate (KCNA)** — The Linux Foundation / CNCF
+* **AWS Certified Solutions Architect – Associate** — Amazon Web Services
+* **AWS Certified Developer – Associate** — Amazon Web Services
+* **AWS Certified Cloud Practitioner** — Amazon Web Services
+* *In Progress:* **ITIL Foundation** (Committed within 3 months)
+
+---
+
+## B2B Consultancy & Hardware Fulfillment: Stepcon Solutions (`RC - 8284984`)
+
+* **Global B2B Cloud, AI & DevSecOps Contracting:** Immediate Corp-to-Corp (C2C) onboarding in synchronous CET/UK/EMEA hours with zero local employer payroll tax liability.
+* **Enterprise Hardware Commerce Division:** Procurement, QA diagnostics, and nationwide/global fulfillment of Consumer, Business, High-Performance, and Custom-Made Laptops and Desktops.
