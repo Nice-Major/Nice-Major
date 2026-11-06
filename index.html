@@ -3,151 +3,844 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>John Victor Aniekwe | AI-Augmented Platform Engineer</title>
+  <title>John_Victor_Aniekwe_DevOps_Engineer_CV</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
-    :root { --primary: #1A73E8; --dark: #111827; --muted: #4B5563; --light-bg: #F9FAFB; --border: #E5E7EB; }
-    * { 
-      box-sizing: border-box; 
-      /* Critical ATS fix: prevents "ff", "fi" from merging into broken glyphs in PDFs */
-      font-variant-ligatures: none; 
-      -webkit-font-variant-ligatures: none; 
+    :root {
+      --primary: #0F52BA;
+      --accent: #1A73E8;
+      --dark: #0F172A;
+      --text: #1E293B;
+      --muted: #475569;
+      --light: #F8FAFC;
+      --border: #E2E8F0;
+      --badge-bg: #EFF6FF;
+      --badge-text: #1D4ED8;
     }
-    body { margin: 0; font-family: 'Inter', Arial, sans-serif; color: var(--dark); background: #F3F4F6; line-height: 1.5; font-size: 14px; }
-    
-    /* Web-Only Control Bar */
-    .control-bar { background: var(--dark); color: #fff; padding: 12px 24px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; }
-    .filter-btn { background: #1F2937; color: #E5E7EB; border: 1px solid #374151; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 12px; margin-right: 6px; }
-    .filter-btn.active, .filter-btn:hover { background: var(--primary); color: #fff; border-color: var(--primary); }
-    .action-btn { background: #10B981; color: #fff; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-weight: bold; }
-    
-    /* Document Container */
-    .page-container { max-width: 900px; margin: 24px auto; background: #fff; padding: 40px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
-    header { border-bottom: 2px solid var(--primary); padding-bottom: 16px; margin-bottom: 20px; }
-    h1 { margin: 0 0 4px 0; font-size: 24px; font-weight: 700; letter-spacing: -0.5px; }
-    .headline { font-size: 15px; font-weight: 600; color: var(--primary); margin-bottom: 8px; }
-    .contact-bar { font-size: 13px; color: var(--muted); }
-    .contact-bar a { color: var(--primary); text-decoration: none; }
-    
-    h2 { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border); padding-bottom: 4px; margin: 24px 0 12px 0; }
-    .job-block { margin-bottom: 16px; page-break-inside: avoid; }
-    .job-header { display: flex; justify-content: space-between; font-weight: 600; font-size: 14px; margin-bottom: 4px; }
-    .job-meta { font-size: 12.5px; color: var(--muted); font-weight: 500; }
-    ul { margin: 0; padding-left: 20px; }
-    li { margin-bottom: 6px; font-size: 13px; color: #1F2937; }
-    .skill-row { font-size: 13px; margin-bottom: 6px; }
-    
-    /* Strict PDF Print CSS */
+    * {
+      box-sizing: border-box;
+      font-variant-ligatures: none;
+      -webkit-font-variant-ligatures: none;
+    }
+    body {
+      margin: 0;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+      color: var(--text);
+      background: #F1F5F9;
+      line-height: 1.5;
+      font-size: 14px;
+    }
+    /* Sticky Top Navigation & Category Switcher */
+    .topbar {
+      background: var(--dark);
+      color: #FFFFFF;
+      padding: 14px 24px;
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      box-shadow: 0 4px 16px rgba(15, 23, 42, 0.25);
+    }
+    .brand-title {
+      font-weight: 700;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .status-pill {
+      background: #065F46;
+      color: #A7F3D0;
+      font-size: 11px;
+      padding: 3px 8px;
+      border-radius: 999px;
+      font-weight: 600;
+    }
+    .tab-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .tab-btn {
+      background: #1E293B;
+      color: #CBD5E1;
+      border: 1px solid #334155;
+      padding: 7px 13px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 600;
+      transition: all 0.15s ease;
+    }
+    .tab-btn.active, .tab-btn:hover {
+      background: var(--accent);
+      color: #FFFFFF;
+      border-color: var(--accent);
+    }
+    .export-btn {
+      background: #10B981;
+      color: #FFFFFF;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 12.5px;
+      font-weight: 700;
+      transition: background 0.15s ease;
+    }
+    .export-btn:hover {
+      background: #059669;
+    }
+    /* Main Container */
+    .wrapper {
+      max-width: 960px;
+      margin: 28px auto;
+      background: #FFFFFF;
+      padding: 44px 52px;
+      border-radius: 10px;
+      box-shadow: 0 10px 30px rgba(15, 23, 42, 0.07);
+    }
+    header {
+      border-bottom: 2px solid var(--primary);
+      padding-bottom: 16px;
+      margin-bottom: 20px;
+    }
+    .name-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    h1 {
+      margin: 0;
+      font-size: 28px;
+      font-weight: 800;
+      color: var(--dark);
+      letter-spacing: -0.4px;
+    }
+    .file-tag-preview {
+      font-family: monospace;
+      font-size: 11.5px;
+      background: #F1F5F9;
+      color: var(--muted);
+      padding: 4px 8px;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+    }
+    .role-headline {
+      font-size: 15.5px;
+      font-weight: 700;
+      color: var(--primary);
+      margin: 6px 0 8px 0;
+    }
+    .contact-strip {
+      font-size: 12.8px;
+      color: var(--muted);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .contact-strip a {
+      color: var(--primary);
+      text-decoration: none;
+      font-weight: 500;
+    }
+    .mobility-bar {
+      margin-top: 10px;
+      background: var(--badge-bg);
+      color: var(--badge-text);
+      padding: 7px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      border-left: 3.5px solid var(--primary);
+    }
+    /* KPI Grid (Portfolio General Source of Truth View) */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-bottom: 22px;
+    }
+    .kpi-box {
+      background: var(--light);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px;
+      text-align: center;
+    }
+    .kpi-num {
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--primary);
+    }
+    .kpi-cap {
+      font-size: 11.5px;
+      color: var(--muted);
+      font-weight: 500;
+    }
+    /* Section Styling */
+    section {
+      margin-bottom: 20px;
+    }
+    h2 {
+      font-size: 13px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.7px;
+      color: var(--dark);
+      border-bottom: 1.5px solid var(--border);
+      padding-bottom: 5px;
+      margin: 0 0 10px 0;
+    }
+    .summary-p {
+      margin: 0;
+      font-size: 13.5px;
+      color: var(--text);
+      text-align: justify;
+    }
+    .skills-table {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 7px;
+      font-size: 13px;
+    }
+    .skill-line strong {
+      color: var(--dark);
+    }
+    .exp-card {
+      margin-bottom: 16px;
+      page-break-inside: avoid;
+    }
+    .exp-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      flex-wrap: wrap;
+    }
+    .exp-role {
+      font-weight: 700;
+      font-size: 14.2px;
+      color: var(--dark);
+    }
+    .exp-org {
+      font-weight: 700;
+      color: var(--primary);
+    }
+    .exp-dates {
+      font-size: 12.2px;
+      color: var(--muted);
+      font-weight: 600;
+    }
+    ul.exp-bullets {
+      margin: 6px 0 0 0;
+      padding-left: 18px;
+    }
+    ul.exp-bullets li {
+      margin-bottom: 5px;
+      font-size: 13px;
+      color: var(--text);
+    }
+    .cert-list {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 6px;
+      font-size: 13px;
+    }
+    .b2b-card {
+      background: #F8FAFC;
+      border: 1px solid #CBD5E1;
+      border-radius: 8px;
+      padding: 16px;
+      margin-top: 18px;
+    }
     @media print {
-      @page { size: A4; margin: 12mm 15mm; }
-      body { background: #fff; font-size: 10pt; }
-      .no-print { display: none !important; }
-      .page-container { margin: 0; padding: 0; box-shadow: none; max-width: 100%; }
+      @page {
+        size: A4;
+        margin: 11mm 14mm;
+      }
+      body {
+        background: #FFFFFF;
+        font-size: 10pt;
+      }
+      .no-print {
+        display: none !important;
+      }
+      .wrapper {
+        max-width: 100%;
+        margin: 0;
+        padding: 0;
+        box-shadow: none;
+        border: none;
+      }
+      .kpi-grid {
+        display: none;
+      }
       h1 { font-size: 18pt; }
-      .headline { font-size: 11pt; }
-      h2 { font-size: 10.5pt; margin-top: 12pt; }
-      li, .skill-row { font-size: 9.5pt; line-height: 1.35; }
+      .role-headline { font-size: 11.5pt; }
+      h2 { font-size: 10.5pt; margin-top: 10pt; }
+      .summary-p, ul.exp-bullets li, .skills-table, .cert-list {
+        font-size: 9.5pt;
+        line-height: 1.35;
+      }
     }
   </style>
 </head>
 <body>
 
-  <div class="control-bar no-print">
-    <div>
-      <button class="filter-btn active" onclick="applyFilter('devops')">DevOps & AI Lens</button>
-      <button class="filter-btn" onclick="applyFilter('architect')">Cloud Architect Lens</button>
-      <button class="filter-btn" onclick="applyFilter('support')">L3 Support Lens</button>
+  <nav class="topbar no-print">
+    <div class="brand-title">
+      <span>🌐 Nice-Major Source of Truth & Multi-Category CV Studio</span>
+      <span class="status-pill">UTF-8 Verified • Zero Credly Links</span>
     </div>
-    <button class="action-btn" onclick="window.print()">⬇ Download Tailored ATS PDF</button>
-  </div>
+    <div class="tab-group">
+      <button class="tab-btn active" onclick="selectCategory('devops', 'DevOps_Engineer')">1. Dev(Sec)Ops & AI Platform</button>
+      <button class="tab-btn" onclick="selectCategory('architect', 'Cloud_Solutions_Architect')">2. Cloud Solutions Architect</button>
+      <button class="tab-btn" onclick="selectCategory('infra', 'Cloud_Infrastructure_Engineer')">3. Cloud Infra & Linux SysAdmin</button>
+      <button class="tab-btn" onclick="selectCategory('support', 'Technical_Support_Engineer')">4. L3 Cloud Support & IT Spec</button>
+      <button class="tab-btn" onclick="toggleB2BSection()" id="b2bBtn">B2B Stepcon Mode: OFF</button>
+    </div>
+    <button class="export-btn" onclick="window.print()">⬇ Export Category PDF</button>
+  </nav>
 
-  <main class="page-container">
+  <main class="wrapper">
     <header>
-      <h1 id="c-name">Loading...</h1>
-      <div class="headline" id="c-headline">AI-Augmented Cloud Platform Engineer</div>
-      <div class="contact-bar" id="c-contact"></div>
+      <div class="name-row">
+        <h1 id="cand-name">John Victor Aniekwe</h1>
+        <span class="file-tag-preview no-print" id="pdf-filename-badge">PDF File: John_Victor_Aniekwe_DevOps_Engineer_CV.pdf</span>
+      </div>
+      <div class="role-headline" id="cand-headline"></div>
+      <div class="contact-strip" id="cand-contacts"></div>
+      <div class="mobility-bar">
+        <strong>Global Engagement Tracks:</strong> (1) Worldwide / EMEA / CET (UTC+1) Remote from Nigeria • (2) Visa-Sponsored Relocation (B.Sc. Computer Science + 4x AWS/CNCF Certified) • (3) Immediate Corp-to-Corp B2B Contract via <strong>Stepcon Solutions (RC - 8284984)</strong>.
+      </div>
     </header>
 
+    <div class="kpi-grid no-print" id="kpi-container"></div>
+
     <section>
-      <h2>Core Technical Competencies</h2>
-      <div id="skills-container"></div>
+      <h2>Executive Summary</h2>
+      <p class="summary-p" id="cand-summary"></p>
+    </section>
+
+    <section>
+      <h2>Core Technical & AI Competencies</h2>
+      <div class="skills-table" id="skills-container"></div>
     </section>
 
     <section>
       <h2>Professional Experience</h2>
-      <div id="experience-container"></div>
+      <div id="exp-container"></div>
     </section>
 
     <section>
-      <h2>Education & Certifications</h2>
-      <div id="certs-container" style="font-size: 13px; margin-bottom: 8px;"></div>
-      <div style="font-size: 13px;"><strong>B.Sc. in Computer Science</strong> — University of Nigeria (2014 – 2018)</div>
+      <h2>Verified Certifications & Academic Credentials</h2>
+      <div class="cert-list" id="cert-container"></div>
+      <div style="margin-top: 8px; font-size: 13px;">
+        <strong>Bachelor of Science (B.Sc.) in Computer Science</strong> — University of Nigeria (2014 – 2018) | <strong>Languages:</strong> English (Professional Fluency)
+      </div>
+    </section>
+
+    <section class="b2b-card no-print" id="b2b-container">
+      <h2>B2B Corporate Contracting & Enterprise Hardware Vehicle — Stepcon Solutions (RC - 8284984)</h2>
+      <p style="margin: 4px 0 6px 0; font-size: 12.8px;" id="b2b-pitch"></p>
+      <p style="margin: 0; font-size: 12.5px; color: var(--muted);" id="b2b-hw"></p>
     </section>
   </main>
 
   <script>
-    let profileData = {};
-    
-    async function loadData() {
-      try {
-        const response = await fetch('./profile-data.json');
-        profileData = await response.json();
-        
-        // Populate Header
-        document.getElementById('c-name').textContent = profileData.candidate.name;
-        document.getElementById('c-contact').innerHTML = `
-          ${profileData.candidate.location} | 
-          <a href="mailto:${profileData.candidate.email}">${profileData.candidate.email}</a> | 
-          ${profileData.candidate.phone} | 
-          <a href="${profileData.candidate.linkedin}" target="_blank">LinkedIn</a> |
-          <a href="${profileData.candidate.portfolioUrl}">Portfolio Source</a>
-        `;
-        
-        // Check URL for ?role= parameter, default to devops
-        const urlParams = new URLSearchParams(window.location.search);
-        const role = urlParams.get('role') || 'devops';
-        applyFilter(role);
-      } catch (err) {
-        console.error("Error loading JSON:", err);
+    // Embedded Single Source of Truth (Fault-Tolerant Fallback + Live Fetch)
+    let MASTER_DATA = {
+  "candidate": {
+    "firstName": "John",
+    "middleName": "Victor",
+    "lastName": "Aniekwe",
+    "fullName": "John Victor Aniekwe",
+    "email": "aniekwevictor9@gmail.com",
+    "phone": "+234 816 484 1085",
+    "location": "Lagos, Nigeria (UTC+1 / CET Synchronous)",
+    "linkedin": "https://www.linkedin.com/in/victor-aniekwe",
+    "githubProfile": "https://github.com/Nice-Major",
+    "portfolioUrl": "https://nice-major.github.io/Nice-Major/",
+    "mobilityCategories": [
+      "Global Remote from Anywhere (Nigeria / UTC+1 / CET / EMEA Synchronous)",
+      "Visa-Sponsored Relocation (Canada GTS/LMIA, UK Skilled Worker, EU Blue Card, Spain 20-Day UGE-CE HQP / Digital Nomad Visa)",
+      "B2B Corp-to-Corp Contractor via Stepcon Solutions (Nigerian CAC: RC - 8284984)"
+    ],
+    "education": {
+      "degree": "Bachelor of Science (B.Sc.) in Computer Science",
+      "institution": "University of Nigeria",
+      "period": "2014 – 2018"
+    },
+    "languages": [
+      "English (Professional Fluency — Written & Spoken)"
+    ],
+    "certifications": [
+      {
+        "name": "Kubernetes and Cloud Native Associate (KCNA)",
+        "issuer": "The Linux Foundation / CNCF",
+        "status": "Active",
+        "tags": [
+          "all",
+          "devops",
+          "architect",
+          "infra",
+          "support"
+        ]
+      },
+      {
+        "name": "AWS Certified Solutions Architect – Associate",
+        "issuer": "Amazon Web Services",
+        "status": "Active",
+        "tags": [
+          "all",
+          "architect",
+          "devops",
+          "infra",
+          "support"
+        ]
+      },
+      {
+        "name": "AWS Certified Developer – Associate",
+        "issuer": "Amazon Web Services",
+        "status": "Active",
+        "tags": [
+          "all",
+          "devops",
+          "architect",
+          "support"
+        ]
+      },
+      {
+        "name": "AWS Certified Cloud Practitioner",
+        "issuer": "Amazon Web Services",
+        "status": "Active",
+        "tags": [
+          "all",
+          "architect",
+          "devops",
+          "infra",
+          "support"
+        ]
+      },
+      {
+        "name": "ITIL Foundation (Pursuing — Committed within 3 Months)",
+        "issuer": "AXELOS / PeopleCert",
+        "status": "In Progress",
+        "tags": [
+          "all",
+          "support",
+          "infra"
+        ]
       }
+    ]
+  },
+  "kpiMetrics": [
+    {
+      "value": "99.9%",
+      "label": "Enterprise Cloud Uptime SLA"
+    },
+    {
+      "value": "99%",
+      "label": "First-Day L3 Issue Resolution"
+    },
+    {
+      "value": ">60%",
+      "label": "AI Prediction Engine Accuracy"
+    },
+    {
+      "value": "<15 Min",
+      "label": "IaC Provisioning (Down from Hours)"
+    }
+  ],
+  "roleCategories": {
+    "devops": {
+      "categoryTitle": "Dev(Sec)Ops & AI Platform Engineer",
+      "targetTitles": [
+        "DevOps Engineer",
+        "DevSecOps Engineer",
+        "Azure/AWS DevOps Engineer",
+        "Platform Engineer",
+        "Site Reliability Engineer (SRE)"
+      ],
+      "headline": "Senior DevOps & AI Platform Engineer | AWS, Azure, Kubernetes (KCNA) & CI/CD Automation",
+      "summary": "Delivery-oriented DevOps and AI Platform Engineer with 5+ years of production experience architecting, automating, and securing high-availability Linux and hybrid cloud environments across AWS and Microsoft Azure. Proven expertise in container orchestration (Docker, Podman, Kubernetes/AKS/EKS), declarative Infrastructure as Code (Terraform, ARM/Bicep), advanced Bash/Python/PowerShell scripting, and AI-augmented operations—deploying Azure OpenAI microservices on Kubernetes pods/nodes (>60% prediction accuracy) and leveraging GitHub Copilot Enterprise across CI/CD, networking, and observability. Track record of sustaining 99.9% platform uptime, 99% first-day L3 incident resolution, and reducing environment provisioning from hours to minutes."
+    },
+    "architect": {
+      "categoryTitle": "Cloud Solutions Architect & Cloud Engineer",
+      "targetTitles": [
+        "Cloud Solutions Architect",
+        "Cloud Engineer",
+        "Multi-Cloud Platform Architect",
+        "AI Cloud Architect"
+      ],
+      "headline": "Cloud Solutions Architect | Multi-Cloud Infrastructure, Microservices & AI Platform Design",
+      "summary": "Solution-oriented Cloud Architect with 5+ years of experience designing secure, scalable, and cost-optimized cloud platforms across AWS and Microsoft Azure for enterprise and fintech workloads. Adept at leading architectural decisions across containerized microservices (AKS, EKS, ECS, ACA), hybrid cloud networking (VPCs, VNets, VPN Gateways, Private Endpoints), Infrastructure as Code (Terraform, ARM/Bicep), and production Azure OpenAI / ML inference pipelines. Proven ability to align system design with FinOps cost efficiency, DevSecOps governance, and 99.9% availability SLAs."
+    },
+    "infra": {
+      "categoryTitle": "Cloud Infrastructure Engineer & Linux System Administrator",
+      "targetTitles": [
+        "Cloud Infrastructure Engineer",
+        "System Administrator",
+        "Linux Systems Engineer",
+        "Hybrid Cloud Administrator"
+      ],
+      "headline": "Cloud Infrastructure & Linux Systems Engineer | AWS, Azure, Hybrid Networking & Reliability",
+      "summary": "Hands-on Cloud Infrastructure Engineer and Linux/Windows System Administrator with 5+ years of experience administering mission-critical compute, storage, virtualization, and hybrid network topologies across AWS and Microsoft Azure. Specialized in Linux/Ubuntu Server and Windows Server administration, CPU/memory/kernel performance tuning, VPC/VNet routing and security groups/NSGs, automated OS patching, vulnerability compliance, and disaster recovery operations sustaining 99.9% enterprise uptime."
+    },
+    "support": {
+      "categoryTitle": "L3 Technical Support Engineer & IT Specialist",
+      "targetTitles": [
+        "Technical Support Engineer (L3)",
+        "Cloud Support Engineer",
+        "IT Specialist / Administrator",
+        "Application Support Engineer"
+      ],
+      "headline": "Senior Technical Cloud Support Engineer (L3) & Enterprise IT Infrastructure Specialist",
+      "summary": "Customer-obsessed L3 Cloud Application Support Engineer and IT Infrastructure Specialist with 5+ years of experience diagnosing and resolving complex production escalations across Microsoft Azure, AWS, Linux/Ubuntu, Windows Server, and containerized runtimes. Achieved a verified 99% first-day issue resolution rate and 99.9% infrastructure uptime SLA by integrating Microsoft Copilot within DfM (Design for Manufacturability / Incident Management) backed by Troubleshooting Guides (TsG) and engineering wikis, combined with deep log, metric, and trace root-cause analysis (RCA)."
+    }
+  },
+  "skillsMatrix": [
+    {
+      "category": "AI-Augmented Engineering & MLOps",
+      "items": [
+        "Azure OpenAI Production Deployment (AKS Pods/Nodes)",
+        "GitHub Copilot Enterprise (CI/CD, IaC, Architecture & RCA)",
+        "Microsoft Copilot in DfM (TsG & Wiki Knowledge Base Integration)",
+        "AI Prediction & Storytelling Engine Infrastructure (>60% Accuracy)",
+        "AI-Driven ClickUp REST API Workflow & Board Automation"
+      ],
+      "tags": [
+        "devops",
+        "architect",
+        "infra",
+        "support"
+      ]
+    },
+    {
+      "category": "Cloud Platforms (AWS & Microsoft Azure)",
+      "items": [
+        "AWS (EC2, VPC, S3, Lambda, CloudWatch, IAM, Systems Manager, EKS, ECS)",
+        "Microsoft Azure (Virtual Machines, App Service Dev & OSS, VNets, VPN Gateway, NSGs, Key Vault, Monitor, Application Insights, Azure Functions, Backup, AKS, ACA, ACI, ACR)"
+      ],
+      "tags": [
+        "devops",
+        "architect",
+        "infra",
+        "support"
+      ]
+    },
+    {
+      "category": "Containers, Orchestration & Microservices",
+      "items": [
+        "Kubernetes (KCNA Certified, AKS, EKS)",
+        "Docker & Podman",
+        "AWS ECS & Azure Container Apps (ACA) / ACI / ACR",
+        "Pods & Nodes Lifecycle Management",
+        "Microservices Architecture & REST API Integration"
+      ],
+      "tags": [
+        "devops",
+        "architect",
+        "infra",
+        "support"
+      ]
+    },
+    {
+      "category": "CI/CD, Infrastructure as Code (IaC) & Scripting",
+      "items": [
+        "Terraform",
+        "ARM Templates & Bicep",
+        "GitHub Actions & Azure DevOps Pipelines",
+        "Jenkins / TeamCity / Ansible-Compatible Automation",
+        "Advanced Bash Scripting, Python, PowerShell, YAML, Git"
+      ],
+      "tags": [
+        "devops",
+        "architect",
+        "infra",
+        "support"
+      ]
+    },
+    {
+      "category": "Linux/Windows Systems & Hybrid Networking",
+      "items": [
+        "Linux / Ubuntu Server & Windows Server Administration",
+        "On-Premises Servers & Virtualization",
+        "CPU, Memory & OS Performance Tuning",
+        "VPCs, VNets, VPN Connectivity, Route Tables, Private Endpoints, Security Groups & NSGs",
+        "User Administration, System Patching & Lifecycle Management"
+      ],
+      "tags": [
+        "infra",
+        "devops",
+        "support",
+        "architect"
+      ]
+    },
+    {
+      "category": "Observability, SRE & DevSecOps Governance",
+      "items": [
+        "Observability Frameworks (Logs, Metrics, Distributed Traces)",
+        "AWS CloudWatch, Azure Monitor, Application Insights, Prometheus/Grafana/Loki-Compatible Telemetry",
+        "SLI / SLO / SLA Compliance (99.9% Uptime, 99% First-Day Resolution)",
+        "IAM Access Controls, Vulnerability Checks, Disaster Recovery & Backup Restoration",
+        "Architecture Diagrams, SOPs & Operational Runbooks"
+      ],
+      "tags": [
+        "devops",
+        "architect",
+        "infra",
+        "support"
+      ]
+    }
+  ],
+  "experience": [
+    {
+      "company": "GVOC",
+      "location": "Remote, United Kingdom (UTC+0 / CET Synchronous)",
+      "period": "December 2025 – Present",
+      "titles": {
+        "devops": "DevOps Engineer / Platform Architect",
+        "architect": "Cloud Solutions & Platform Architect",
+        "infra": "Cloud Infrastructure & Platform Engineer",
+        "support": "Cloud Infrastructure & Operations Support Engineer"
+      },
+      "bullets": [
+        {
+          "text": "Architected and deployed Azure OpenAI services alongside containerized application workloads running on Kubernetes pods and nodes in Azure to power an AI football prediction and storytelling platform achieving a >60% prediction success rate.",
+          "tags": [
+            "devops",
+            "architect",
+            "infra",
+            "support"
+          ]
+        },
+        {
+          "text": "Leveraged GitHub Copilot Enterprise across the engineering lifecycle to design and maintain secure CI/CD pipelines (GitHub Actions, Azure DevOps) and reusable Infrastructure as Code (Terraform, ARM/Bicep) spanning compute, storage, containerization, identity (IAM), and security.",
+          "tags": [
+            "devops",
+            "architect",
+            "infra"
+          ]
+        },
+        {
+          "text": "Administered and monitored hybrid cloud infrastructure across AWS and Microsoft Azure, executing routine system health checks, capacity monitoring, OS performance tuning, and FinOps cost optimization to sustain high availability.",
+          "tags": [
+            "infra",
+            "devops",
+            "architect",
+            "support"
+          ]
+        },
+        {
+          "text": "Configured and secured enterprise network topologies including VPCs, VNets, VPN connectivity, route tables, security groups, NSGs, and private endpoints for resilient microservices communication.",
+          "tags": [
+            "infra",
+            "architect",
+            "devops",
+            "support"
+          ]
+        },
+        {
+          "text": "Engineered AI-assisted observability, logging, and monitoring frameworks supporting business intelligence and ML prediction workloads while enforcing DevSecOps controls, vulnerability checks, patching schedules, and disaster recovery procedures.",
+          "tags": [
+            "devops",
+            "infra",
+            "support",
+            "architect"
+          ]
+        },
+        {
+          "text": "Automated technical documentation, architecture diagrams, SOPs, and agile project tracking by engineering AI-driven REST API integrations with ClickUp to dynamically create and update sprint boards and task statuses.",
+          "tags": [
+            "devops",
+            "support",
+            "architect",
+            "infra"
+          ]
+        }
+      ]
+    },
+    {
+      "company": "TEKNOWLEDGE",
+      "location": "Victoria Island, Lagos, Nigeria",
+      "period": "October 2021 – November 2025",
+      "titles": {
+        "devops": "Cloud DevOps & Application Platform Engineer (Azure App Service L3)",
+        "architect": "Cloud Infrastructure & Application Platform Specialist (L3)",
+        "infra": "Cloud Infrastructure & Systems Escalation Engineer (L3)",
+        "support": "Technical Cloud Application Support Engineer – Azure App Service (Dev & OSS) L3"
+      },
+      "bullets": [
+        {
+          "text": "Designed, managed, and supported enterprise cloud infrastructure across Compute, Storage, Security, and Hybrid Networking (VNets, VPNs, NSGs) for Microsoft Azure customers, sustaining a verified 99.9% platform uptime SLA.",
+          "tags": [
+            "support",
+            "infra",
+            "devops",
+            "architect"
+          ]
+        },
+        {
+          "text": "Served as the L3 escalation lead for complex Linux/OSS, container, networking, and application code/configuration incidents, achieving a 99% first-day issue resolution rate through structured root-cause analysis (RCA).",
+          "tags": [
+            "support",
+            "infra",
+            "devops"
+          ]
+        },
+        {
+          "text": "Integrated Microsoft Copilot into DfM incident workflows configured with Troubleshooting Guides (TsG) and internal engineering wikis as knowledge sources, accelerating L3 triage and boosting team-wide Customer Satisfaction (CSAT).",
+          "tags": [
+            "support",
+            "devops",
+            "architect",
+            "infra"
+          ]
+        },
+        {
+          "text": "Architected automated CI/CD deployment pipelines and reusable IaC templates plus Bash, Python, and PowerShell scripts, reducing multi-environment provisioning and deployment time from hours to minutes.",
+          "tags": [
+            "devops",
+            "architect",
+            "infra",
+            "support"
+          ]
+        },
+        {
+          "text": "Implemented comprehensive observability and alerting solutions across Azure Monitor, Application Insights, and AWS CloudWatch by configuring distributed logs, metrics, and traces, and documenting resolutions into a reusable operational knowledge base.",
+          "tags": [
+            "support",
+            "devops",
+            "infra",
+            "architect"
+          ]
+        }
+      ]
+    }
+  ],
+  "stepconSolutions": {
+    "companyName": "Stepcon Solutions",
+    "cacNumber": "RC - 8284984",
+    "jurisdiction": "Corporate Affairs Commission (CAC), Federal Republic of Nigeria",
+    "b2bConsultancyPitch": "Stepcon Solutions (RC - 8284984) provides immediate Corp-to-Corp (C2C) Cloud Architecture, DevSecOps, AI Platform Engineering, and L3 Escalation Support pods in synchronous CET/UK/EMEA business hours—eliminating international payroll tax friction, Employer-of-Record (EOR) markups, and visa lead times.",
+    "hardwareDivision": "Enterprise & Custom Computing Hardware Division: Procurement, QA diagnostics, WhatsApp-to-Inventory catalog automation, and corporate fulfillment for Consumer, Business, High-Performance, and Custom-Built Laptops and Desktops."
+  }
+};
+    let b2bInPrint = false;
+
+    async function bootPortfolio() {
+      try {
+        const res = await fetch('./profile-data.json');
+        if (res.ok) {
+          MASTER_DATA = await res.json();
+        }
+      } catch (e) {
+        console.log('Using embedded Single Source of Truth JSON.');
+      }
+      const params = new URLSearchParams(window.location.search);
+      const roleParam = params.get('role') || 'devops';
+      const roleMap = {
+        devops: 'DevOps_Engineer',
+        architect: 'Cloud_Solutions_Architect',
+        infra: 'Cloud_Infrastructure_Engineer',
+        support: 'Technical_Support_Engineer'
+      };
+      selectCategory(roleParam, roleMap[roleParam] || 'DevOps_Engineer');
     }
 
-    function applyFilter(role) {
-      if(!profileData.experience) return;
-      
-      // Render Skills
-      const skillsHtml = profileData.skillsMatrix.map(s => 
-        `<div class="skill-row"><strong>${s.category}:</strong> ${s.items.join(', ')}</div>`
-      ).join('');
-      document.getElementById('skills-container').innerHTML = skillsHtml;
+    function selectCategory(catKey, fileRoleSlug) {
+      const cat = MASTER_DATA.roleCategories[catKey] || MASTER_DATA.roleCategories.devops;
+      const pdfName = `John_Victor_Aniekwe_${fileRoleSlug}_CV`;
+      document.title = pdfName;
+      document.getElementById('pdf-filename-badge').textContent = `PDF File: ${pdfName}.pdf`;
 
-      // Render Experience based on active role lens
-      const expHtml = profileData.experience.map(job => {
-        const title = job.titles[role] || job.titles.devops || job.titles.support;
-        // Filter bullets based on tags
-        const bullets = job.bullets.filter(b => b.tags.includes(role))
-                                   .map(b => `<li>${b.text}</li>`).join('');
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        if (btn.getAttribute('onclick')?.includes(`'${catKey}'`)) {
+          btn.classList.add('active');
+        } else if (btn.id !== 'b2bBtn') {
+          btn.classList.remove('active');
+        }
+      });
+
+      const c = MASTER_DATA.candidate;
+      document.getElementById('cand-name').textContent = c.fullName;
+      document.getElementById('cand-headline').textContent = cat.headline;
+      document.getElementById('cand-contacts').innerHTML = `
+        <span>📍 ${c.location}</span> |
+        <a href="mailto:${c.email}">${c.email}</a> |
+        <span>${c.phone}</span> |
+        <a href="${c.linkedin}" target="_blank">linkedin.com/in/victor-aniekwe</a> |
+        <a href="${c.githubProfile}" target="_blank">github.com/Nice-Major</a>
+      `;
+
+      // Render KPIs
+      document.getElementById('kpi-container').innerHTML = MASTER_DATA.kpiMetrics.map(k => `
+        <div class="kpi-box">
+          <div class="kpi-num">${k.value}</div>
+          <div class="kpi-cap">${k.label}</div>
+        </div>
+      `).join('');
+
+      document.getElementById('cand-summary').textContent = cat.summary;
+
+      // Render Filtered Skills
+      document.getElementById('skills-container').innerHTML = MASTER_DATA.skillsMatrix
+        .filter(s => s.tags.includes(catKey))
+        .map(s => `<div class="skill-line"><strong>${s.category}:</strong> ${s.items.join(', ')}</div>`)
+        .join('');
+
+      // Render Filtered Experience
+      document.getElementById('exp-container').innerHTML = MASTER_DATA.experience.map(job => {
+        const roleTitle = job.titles[catKey] || job.titles.devops;
+        const bullets = job.bullets
+          .filter(b => b.tags.includes(catKey))
+          .map(b => `<li>${b.text}</li>`)
+          .join('');
         return `
-          <div class="job-block">
-            <div class="job-header">
-              <span>${title} — <span style="color: var(--primary)">${job.company}</span></span>
-              <span class="job-meta">${job.location} | ${job.period}</span>
+          <div class="exp-card">
+            <div class="exp-top">
+              <div><span class="exp-role">${roleTitle}</span> — <span class="exp-org">${job.company}</span></div>
+              <div class="exp-dates">${job.location} | ${job.period}</div>
             </div>
-            <ul>${bullets}</ul>
+            <ul class="exp-bullets">${bullets}</ul>
           </div>
         `;
       }).join('');
-      document.getElementById('experience-container').innerHTML = expHtml;
 
-      // Render Certs
-      const certsHtml = profileData.candidate.certifications.map(c => 
-        `<div>• <strong>${c.name}</strong> (${c.issuer})</div>`
-      ).join('');
-      document.getElementById('certs-container').innerHTML = certsHtml;
+      // Render Certifications (Strictly NO Credly Links)
+      document.getElementById('cert-container').innerHTML = c.certifications
+        .filter(cert => cert.tags.includes(catKey))
+        .map(cert => `<div>• <strong>${cert.name}</strong> (${cert.issuer})</div>`)
+        .join('');
+
+      // Render Stepcon Solutions B2B Info
+      document.getElementById('b2b-pitch').textContent = MASTER_DATA.stepconSolutions.b2bConsultancyPitch;
+      document.getElementById('b2b-hw').textContent = MASTER_DATA.stepconSolutions.hardwareDivision;
     }
 
-    window.onload = loadData;
+    function toggleB2BSection() {
+      b2bInPrint = !b2bInPrint;
+      const box = document.getElementById('b2b-container');
+      const btn = document.getElementById('b2bBtn');
+      if (b2bInPrint) {
+        box.classList.remove('no-print');
+        btn.textContent = 'B2B Stepcon Mode: ON (Included in PDF)';
+        btn.classList.add('active');
+      } else {
+        box.classList.add('no-print');
+        btn.textContent = 'B2B Stepcon Mode: OFF';
+        btn.classList.remove('active');
+      }
+    }
+
+    window.addEventListener('DOMContentLoaded', bootPortfolio);
   </script>
 </body>
 </html>
