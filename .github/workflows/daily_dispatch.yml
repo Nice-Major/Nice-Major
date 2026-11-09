@@ -1,0 +1,91 @@
+name: Daily Career Opportunity & Stepcon Digest
+
+on:
+  schedule:
+    # 07:00 UTC corresponds to 08:00 AM West Africa Time (WAT = UTC+1)
+    - cron: '0 7 * * *'
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Run in offline dry-run mode (auto-switches to live SMTP when SMTP_PASSWORD secret is set)'
+        required: false
+        default: 'false'
+        type: boolean
+      per_opportunity:
+        description: 'Send a separate dedicated email per opportunity (each with its tied PDF CV & Cover Letter)'
+        required: false
+        default: false
+        type: boolean
+      force:
+        description: 'Bypass daily idempotency check'
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+jobs:
+  dispatch:
+    name: Execute Daily 8:00 AM Dispatch Pipeline
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout Repository (Nice-Major/Nice-Major)
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+          cache-dependency-path: '**/requirements.txt'
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+      - name: Execute Daily 8:00 AM Dispatch & Workflow Self-Review Audit
+        env:
+          CANDIDATE_NAME: 'John Victor Aniekwe'
+          NOTIFICATION_EMAIL: ${{ secrets.NOTIFICATION_EMAIL || 'aniekwevictor9@gmail.com' }}
+          GITHUB_REPO_URL: 'https://github.com/Nice-Major/Nice-Major.git'
+          PORTFOLIO_URL: 'https://nice-major.github.io/Nice-Major/'
+          LINKEDIN_URL: 'https://www.linkedin.com/in/victor-aniekwe/'
+          STEPCON_ENTITY_NAME: 'Stepcon Solutions'
+          STEPCON_CAC_NUMBER: 'RC - 8284984'
+          SMTP_HOST: ${{ secrets.SMTP_HOST || 'smtp.gmail.com' }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT || '587' }}
+          SMTP_USER: ${{ secrets.SMTP_USER || 'aniekwevictor9@gmail.com' }}
+          SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD || '' }}
+          SMTP_USE_TLS: ${{ secrets.SMTP_USE_TLS || 'true' }}
+          SMTP_SENDER: ${{ secrets.SMTP_SENDER || 'aniekwevictor9@gmail.com' }}
+        run: |
+          if [ -n "$SMTP_PASSWORD" ] && [ "${{ github.event.inputs.dry_run }}" != "true" ]; then
+            export DRY_RUN=false
+            export OFFLINE_MODE=false
+            LIVE_FLAG="--live"
+          else
+            export DRY_RUN=true
+            export OFFLINE_MODE=true
+            LIVE_FLAG="--dry-run"
+          fi
+          FORCE_FLAG="${{ github.event.inputs.force == 'true' && '--force' || '' }}"
+          PER_OPP_FLAG="${{ github.event.inputs.per_opportunity == 'true' && '--per-opportunity' || '' }}"
+          python -m scheduler.daily_dispatch $LIVE_FLAG $FORCE_FLAG $PER_OPP_FLAG
+
+      - name: Upload Daily Digest, PDF Packages & Workflow Audit Artifacts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: daily-career-digests-${{ github.run_id }}
+          path: |
+            output/digests/
+            output/packages/
+            output/proposals/
+            output/audit/
+            output/dispatch_log.json
+          retention-days: 30
+          if-no-files-found: ignore

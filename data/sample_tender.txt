@@ -1,0 +1,13 @@
+RFP Reference: RFP-2026-CLOUD-MOD-09
+Client: EuroFin Cloud Services Ltd (UK / EMEA)
+Title: Enterprise Azure & AWS Cloud Infrastructure Modernization, Kubernetes DevSecOps & L3 Support Retainer
+Contract Type: B2B Corp-to-Corp (C2C) Consultancy / Managed Service Retainer
+Synchronous Window: UK / CET / UTC+1 Business Hours
+Budget: $12,000 - $18,000 USD / Month (or GBP / EUR / NGN equivalent)
+
+Scope of Work:
+EuroFin Cloud Services invites registered IT consultancy firms to submit a technical and commercial proposal for a 12-month Corp-to-Corp (C2C) cloud modernization and L3 platform engineering engagement:
+1. Multi-Cloud Architecture & IaC: Design and provision high-availability Microsoft Azure (App Service, AKS, VNets, Key Vault) and AWS (EC2, EKS, VPC, S3, IAM) environments using modular Terraform and Bicep templates (<15 minute provisioning target).
+2. Container Orchestration & AI Platform Support: Operationalize Docker and Kubernetes (AKS/EKS) workloads, CI/CD pipelines (GitHub Actions / Azure DevOps), and Azure OpenAI microservices.
+3. Observability & L3 Escalation SLA: Deliver 99.9% platform uptime SLA monitoring (Azure Monitor, Application Insights, CloudWatch, Prometheus/Grafana) and L3 incident triage with a 99% first-day root-cause analysis (RCA) target.
+4. Vendor Requirements: Must be a legally registered corporate entity (e.g., CAC RC registration) capable of direct C2C invoicing in USD, GBP, EUR, or NGN without Employer-of-Record (EOR) markups, led by AWS Solutions Architect and KCNA certified engineers.

@@ -1,0 +1,15 @@
+# ============================================================================
+# CAREER AUTOMATION DROPZONE: PASTE JOB DESCRIPTION OR JOB URL BELOW
+# ============================================================================
+# Instructions for John Victor Aniekwe (aniekwevictor9@gmail.com):
+# 1. Paste either a direct Job Posting URL (e.g., Workday, Greenhouse, Lever)
+#    OR the full raw Job Description text below these comment lines.
+# 2. Save this file and run:
+#       python cli/main.py apply
+#    (Or to also email the generated PDF CV & Cover Letter to your inbox):
+#       python cli/main.py apply --email --live
+#
+# Note: You can also drop multiple .txt/.md job files into data/job_inbox/
+#       and the daily 8:00 AM automation will automatically evaluate them,
+#       tailor opportunity-specific PDF CVs & Cover Letters, and email them!
+# ============================================================================

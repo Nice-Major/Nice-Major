@@ -1,0 +1,79 @@
+JOHN VICTOR ANIEKWE
+Cloud Solutions Architect | Multi-Cloud Infrastructure, Microservices & AI Platform Design
+Lagos, Nigeria (UTC+1 / CET Synchronous) | +2348130004114 | aniekwevictor9@gmail.com
+LinkedIn: https://www.linkedin.com/in/victor-aniekwe | GitHub: https://github.com/Nice-Major | Portfolio: https://nice-major.github.io/Nice-Major/
+Global Tracks: Worldwide/EMEA/CET Remote from Nigeria | Visa Relocation | B2B Stepcon Solutions (RC - 8284984)
+
+================================================================================
+PROFESSIONAL SUMMARY
+================================================================================
+Solution-oriented Cloud Architect with 5+ years of experience designing secure, scalable, and cost-optimized cloud platforms across AWS and Microsoft Azure for enterprise and fintech workloads. Adept at leading architectural decisions across containerized microservices (AKS, EKS, ECS, ACA), hybrid cloud networking (VPCs, VNets, VPN Gateways, Private Endpoints), Infrastructure as Code (Terraform, ARM/Bicep), and production Azure OpenAI / ML inference pipelines. Proven ability to align system design with FinOps cost efficiency, DevSecOps governance, and 99.9% availability SLAs.
+
+================================================================================
+CORE COMPETENCIES
+================================================================================
+- OBSERVABILITY, SRE & GOVERNANCE (99.9% SLA): SLI / SLO / SLA Compliance (99.9% Uptime, 99% First-Day Resolution), IAM Access Controls, Azure Key Vault Secret/Certificate Management, Vulnerability Checks, Disaster Recovery & Backup Restoration, AWS CloudWatch, Azure Monitor, Application Insights, Prometheus/Grafana/Loki-Compatible Telemetry, Architecture Diagrams, SOPs & Operational Runbooks, Observability Frameworks (Logs, Metrics, Distributed Traces)
+- AI-AUGMENTED PLATFORM ENGINEERING & DEVSECOPS: AI Prediction & Storytelling Engine Infrastructure (>60% Accuracy), Azure AI Foundry & Databricks Platform Integration, Azure OpenAI Production Deployment (AKS Pods/Nodes), GitHub Copilot Enterprise (CI/CD, IaC, Architecture & RCA), Microsoft Copilot in DfM (TsG & Wiki Knowledge Base Integration), AI-Driven ClickUp REST API Workflow & Board Automation
+- CLOUD PLATFORMS & ARCHITECTURE (AWS & MICROSOFT AZURE): Microsoft Azure (Virtual Machines, App Service Dev & OSS, VNets, VPN Gateway, NSGs, Key Vault, Monitor, Application Insights, Azure Functions, Backup, AKS, ACA, ACI, ACR), AWS (EC2, VPC, S3, Lambda, CloudWatch, IAM, Systems Manager, EKS, ECS)
+- SYSTEMS ADMINISTRATION, OS & NETWORKING: User Administration, System Patching & Lifecycle Management, On-Premises Servers & Virtualization, VPCs, VNets, VPN Connectivity, Route Tables, Private Endpoints, Security Groups & NSGs, Linux / Ubuntu Server & Windows Server Administration, CPU, Memory & OS Performance Tuning
+- CONTAINERS & KUBERNETES ORCHESTRATION (KCNA): Pods & Nodes Lifecycle Management, Microservices Architecture & REST API Integration, Kubernetes (KCNA Certified, AKS, EKS), Docker & Podman, AWS ECS & Azure Container Apps (ACA) / ACI / ACR
+- CI/CD & INFRASTRUCTURE AS CODE (IAC): GitHub Actions & Azure DevOps Pipelines, Terraform, ARM Templates & Bicep, Jenkins / TeamCity / Ansible-Compatible Automation, Advanced Bash Scripting, Python, PowerShell, YAML, Git
+
+================================================================================
+PROFESSIONAL EXPERIENCE
+================================================================================
+CLOUD SOLUTIONS & PLATFORM ARCHITECT -- GVOC
+Remote, United Kingdom (UTC+0 / CET Synchronous) | December 2025 - Present
+----------------------------------------
+- Architected and deployed Azure OpenAI, Azure AI Foundry, and Databricks services alongside containerized application workloads running on Kubernetes (AKS) pods and nodes with Azure Container Registry (ACR) to power a Growth Intelligence & AI prediction platform achieving a >60% prediction success rate.
+- Leveraged GitHub Copilot Enterprise across the engineering lifecycle to design and maintain secure CI/CD pipelines (GitHub Actions, Azure DevOps) and reusable Infrastructure as Code (Terraform, ARM/Bicep) spanning compute, storage, containerization, identity (IAM), and security.
+- Administered and monitored hybrid cloud infrastructure across AWS and Microsoft Azure, executing routine system health checks, capacity monitoring, OS performance tuning, and FinOps cost optimization to sustain high availability.
+- Configured and secured enterprise network topologies including VPCs, VNets, VPN connectivity, route tables, security groups, NSGs, private endpoints, and Azure Key Vault secrets/certificates for resilient microservices communication.
+- Engineered AI-assisted observability, logging, and monitoring frameworks supporting business intelligence and ML prediction workloads while enforcing DevSecOps controls, vulnerability checks, patching schedules, and disaster recovery procedures.
+- Automated technical documentation, architecture diagrams, SOPs, and agile project tracking by engineering AI-driven REST API integrations with ClickUp to dynamically create and update sprint boards and task statuses.
+
+CLOUD INFRASTRUCTURE & APPLICATION PLATFORM SPECIALIST (L3) -- TEKNOWLEDGE
+Victoria Island, Lagos, Nigeria | October 2021 - November 2025
+----------------------------------------
+- Designed, managed, and supported enterprise cloud infrastructure across Compute, Storage, Security, and Hybrid Networking (VNets, VPNs, NSGs) for Microsoft Azure customers, sustaining a verified 99.9% platform uptime SLA.
+- Integrated Microsoft Copilot into DfM incident workflows configured with Troubleshooting Guides (TsG) and internal engineering wikis as knowledge sources, accelerating L3 triage and boosting team-wide Customer Satisfaction (CSAT).
+- Architected automated CI/CD deployment pipelines and reusable IaC templates plus Bash, Python, and PowerShell scripts, reducing multi-environment provisioning and deployment time from hours to minutes (<15 minutes).
+- Implemented comprehensive observability and alerting solutions across Azure Monitor, Application Insights, and AWS CloudWatch by configuring distributed logs, metrics, and traces, and documenting resolutions into a reusable operational knowledge base.
+
+ENTERPRISE IT INFRASTRUCTURE SPECIALIST -- ACCESS BANK PLC
+Lagos State, Nigeria | January 2021 - September 2021
+----------------------------------------
+- Supported high-availability fintech banking systems, enterprise server operations, network connectivity, and incident resolution across mission-critical financial infrastructure.
+
+IT SYSTEMS & INFRASTRUCTURE ADMINISTRATOR -- STATE MINISTRY OF FINANCE, BUDGET & NATIONAL PLANNING
+Uyo, Akwa Ibom State, Nigeria | March 2019 - March 2020
+----------------------------------------
+- Administered Windows and Linux server environments, local area networks, user access controls, system updates/patching, and backup operations for public-sector financial planning operations.
+
+IT INFRASTRUCTURE SUPPORT ASSOCIATE -- NIGERIAN AIRSPACE MANAGEMENT AGENCY (NAMA)
+Ikeja, Lagos State, Nigeria | July 2016 - December 2016
+----------------------------------------
+- Provided hardware, OS, and network troubleshooting, workstation provisioning, and operational IT support for aviation management systems.
+
+================================================================================
+CERTIFICATIONS
+================================================================================
+- Kubernetes and Cloud Native Associate (KCNA) -- The Linux Foundation / CNCF (Active)
+- AWS Certified Solutions Architect - Associate -- Amazon Web Services (Active)
+- AWS Certified Developer - Associate -- Amazon Web Services (Active)
+- AWS Certified Cloud Practitioner -- Amazon Web Services (Active)
+- Kubernetes and Cloud Native Essentials (KCNE) -- The Linux Foundation / CNCF (Active)
+- ITIL Foundation (Pursuing -- Committed within 3 Months) -- AXELOS / PeopleCert (In Progress)
+
+================================================================================
+KEY PROJECTS
+================================================================================
+- Azure OpenAI & Kubernetes LLM Orchestration Platform: Architected and operationalized Azure OpenAI microservices on Azure Kubernetes Service (AKS) for real-time prediction and automated storytelling engines; optimized pod auto-scaling, node pools, and resource limits to sustain >60% AI prediction accuracy. [Stack: Azure OpenAI, AKS, Kubernetes, Docker, Python, Terraform, Helm]
+- Multi-Cloud IaC & GitOps Automation Suite: Engineered modular Terraform and ARM/Bicep infrastructure stacks deployed via automated GitHub Actions CI/CD pipelines; reduced multi-environment provisioning and deployment times from hours to under 15 minutes. [Stack: Terraform, Azure Bicep, AWS CloudFormation, GitHub Actions, CI/CD, Bash]
+- Enterprise Azure App Service L3 Diagnostic & RCA Hub: Developed Microsoft Copilot-augmented troubleshooting workflows integrated with Troubleshooting Guides (TsG) and internal engineering wikis, accelerating incident triage and sustaining a 99% same-day RCA resolution rate. [Stack: Azure App Service, Application Insights, Azure Monitor, PowerShell, Python]
+- ClickUp REST API Automation Microservices: Built containerized microservices consuming ClickUp REST APIs for automated ticket lifecycle tracking, SLA breach escalation, and cross-team notification dispatch, eliminating manual status overhead. [Stack: Python, FastAPI, Docker, REST APIs, Webhooks]
+
+================================================================================
+EDUCATION
+================================================================================
+- Bachelor of Science (B.Sc.) in Computer Science -- University of Nigeria, Nsukka (2014 - 2018)

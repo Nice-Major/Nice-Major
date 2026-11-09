@@ -1,0 +1,130 @@
+[
+  {
+    "date": "2026-11-07",
+    "timestamp": "2026-11-07T08:34:37.199024",
+    "metadata": {
+      "dry_run": true,
+      "opportunities_count": 12
+    }
+  },
+  {
+    "date": "2026-11-07",
+    "timestamp": "2026-11-07T08:34:47.909239",
+    "metadata": {
+      "dry_run": true,
+      "opportunities_count": 12
+    }
+  },
+  {
+    "date": "2026-11-07",
+    "timestamp": "2026-11-07T08:35:09.702431",
+    "metadata": {
+      "dry_run": true,
+      "opportunities_count": 12
+    }
+  },
+  {
+    "date": "2026-11-07",
+    "timestamp": "2026-11-07T08:46:34.760349",
+    "metadata": {
+      "dry_run": true,
+      "opportunities_count": 12
+    }
+  },
+  {
+    "date": "2026-11-07",
+    "timestamp": "2026-11-07T08:50:33.046185",
+    "metadata": {
+      "dry_run": true,
+      "opportunities_count": 12
+    }
+  },
+  {
+    "date": "2026-11-07",
+    "timestamp": "2026-11-07T09:18:54.058112",
+    "metadata": {
+      "dry_run": true,
+      "opportunities_count": 12
+    }
+  },
+  {
+    "date": "2026-11-07",
+    "timestamp": "2026-11-07T09:37:46.215614",
+    "metadata": {
+      "dry_run": true,
+      "opportunities_count": 12
+    }
+  },
+  {
+    "date": "2026-11-07",
+    "timestamp": "2026-11-07T09:38:51.707762",
+    "metadata": {
+      "dry_run": true,
+      "opportunities_count": 12
+    }
+  },
+  {
+    "date": "2026-11-07",
+    "timestamp": "2026-11-07T09:40:31.756398",
+    "metadata": {
+      "dry_run": true,
+      "opportunities_count": 12
+    }
+  },
+  {
+    "date": "2026-11-07",
+    "timestamp": "2026-11-07T09:42:30.848749",
+    "metadata": {
+      "dry_run": true,
+      "opportunities_count": 12
+    }
+  },
+  {
+    "date": "2026-11-07",
+    "timestamp": "2026-11-07T09:42:40.362815",
+    "metadata": {
+      "dry_run": true,
+      "opportunities_count": 12
+    }
+  },
+  {
+    "date": "2026-11-07",
+    "timestamp": "2026-11-07T10:38:22.524303",
+    "metadata": {
+      "dry_run": true,
+      "opportunities_count": 12
+    }
+  },
+  {
+    "date": "invalid-date",
+    "timestamp": "2026-11-07T10:39:26.372144",
+    "metadata": {
+      "dry_run": true,
+      "opportunities_count": 12
+    }
+  },
+  {
+    "date": "2026-11-07",
+    "timestamp": "2026-11-07T10:49:08.400052",
+    "metadata": {
+      "dry_run": true,
+      "opportunities_count": 12
+    }
+  },
+  {
+    "date": "2026-11-08",
+    "timestamp": "2026-11-08T03:12:00.928745",
+    "metadata": {
+      "dry_run": true,
+      "opportunities_count": 12
+    }
+  },
+  {
+    "date": "2026-11-09",
+    "timestamp": "2026-11-09T07:48:57.437226",
+    "metadata": {
+      "dry_run": true,
+      "opportunities_count": 12
+    }
+  }
+]

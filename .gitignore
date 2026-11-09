@@ -1,0 +1,46 @@
+# Environment & Secrets (NEVER COMMIT CREDENTIALS)
+.env
+.env.local
+.env.*.local
+
+# Python runtime artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+ENV/
+
+# Testing & Linting
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+
+# IDE & Editor configuration
+.vscode/
+.idea/
+.agents/
+*.sublime-project
+*.sublime-workspace
+
+# Large test outputs & raw email artifacts
+output/test_huge/
+output/test_prop/
+output/gates_foundation_live_test/
+output/packages/
+output/sample_run/
+output/tailored/
+output/sent/
+output/digests/
+output/*.eml
+*.eml
+
+# OS generated files
+.DS_Store
+Thumbs.db
+desktop.ini

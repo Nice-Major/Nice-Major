@@ -1,0 +1,130 @@
+AI Fellow - Africa Regional Offices
+
+locations
+Nairobi, Kenya
+Abuja, Nigeria
+time type
+Full time
+posted on
+Posted 11 Days Ago
+job requisition id
+B021830
+The Foundation
+
+We are the largest nonprofit fighting poverty, disease, and inequity around the world. Founded on a simple premise: people everywhere, regardless of identity or circumstances, should have the chance to live healthy, productive lives. We believe our employees should reflect the rich diversity of the global populations we aim to serve. We provide an exceptional benefits package to employees and their families which include comprehensive medical, dental, and vision coverage with no premiums, generous paid time off, paid family leave, foundation-paid retirement contribution, regional holidays, and opportunities to engage in several employee communities. As a workplace, we’re committed to creating an environment for you to thrive both personally and professionally.
+
+The Team
+
+The Africa team works to enable the foundation’s ambitious goals of scaling evidence-based interventions that target a range of disease and socio-economic conditions which are endemic across Sub-Saharan Africa (SSA). 
+
+The team implements its responsibility through direct country engagement to deploy interventions and delivery models, and by building the partner architecture to replicate successful interventions and models across multiple countries. The team also works closely with key continental and regional organizations to help accelerate implementation across multiple geographies.
+The AI Fellows Program
+
+The AI Fellows Program at the Gates Foundation is dedicated to accelerating the responsible and impactful use of AI in global health, development, and education. Our goal is to attract top-tier, mission-aligned AI talent to drive innovation in these areas. You will be joining the first Africa-based AI Fellows cohort where you work alongside our Africa team, our partners and government counterparts to bring AI tooling to clarify and make decisions that matter most. Each fellow will be assigned 1–2 high-priority projects that will help accelerate achieving the foundation’s mission.
+
+
+Please apply by November 11th to be considered for the Africa cohort.
+
+
+Note: This is a 12-month limited term employment position based in Abuja, Nigeria / Addis Ababa, Ethiopia / Johannesburg, South Africa / Nairobi, Kenya. Candidates must be able to legally work in the country where this position is located without visa sponsorship and relocation support will not be provided.
+
+
+Sample project areas include:
+
+Build decision-support tools across multiple African countries that unify disparate financing flow systems, conducts a periodic bottleneck diagnostics and supports informed decision-making.
+Design and prototype a solution to reduce stockouts of essential medicines at district and facility level, targeting countries facing drawdown of US Government-funded logistics management capacity.
+Strengthen health planning and supply chain systems by building an AI decision-support tool that ranks interventions against budget ceilings and traces prioritized interventions through procurement and cash release, developing a predictive analytics layer to forecast stock-out risk and flag redistribution opportunities before expiry
+ 
+
+Your Role
+
+The AI Fellows Program at the Gates Foundation is designed to accelerate the responsible and impactful use of AI in global health, development, and education. Our goal is to attract top-tier, mission-aligned AI talent to drive innovation in these areas. Building on the success of our US and India-based cohorts, we are expanding our program to Africa. As a Gates AI Fellow, you will join a prestigious cohort applying AI for public good and gain career-defining experience, access to Gates’ powerful network, and exposure to senior leadership.
+
+
+This role offers the unique opportunity to collaborate across multiple divisions within the Foundation—including Global Health (GH), Gender Equality (GE), Global Development (GD), and Global Growth & Opportunity (GGO)— to bridge the possibilities of frontier AI technology with the realities of deployment to create real, meaningful impact.
+
+
+Over the course of 12 months, each AI Fellow will be assigned to high-priority projects, embedded within our Africa team. Fellows may contribute to multiple AI-oriented projects over the course of the fellowship, including concurrently, and should be comfortable adapting their technical approach as project needs evolve.
+
+ 
+
+What You’ll Do
+
+Problem Identification & Scoping
+
+Partner with the Africa team, other teams across the foundation and your specific project sponsors to scope potential AI solutions that can address real-world challenges, ensuring solutions are grounded in user needs and local realities and identifying the data, software, analytical, or operational components needed for those solutions to succeed.
+
+Prototyping & Rapid Experimentation
+
+Prototype rapidly with modern large language models (LLM) and AI tools to test feasibility, generate insights, and create lightweight demos.
+Document findings from prototypes and translate them into actionable recommendations for scale or next steps.
+Identify linkages between your projects and others, building modularized solutions that can be reused across projects where appropriate.
+
+Design and Deliver AI Solutions
+
+Design and prototype AI/Machine Learning (ML) models to address challenges in global health and development and integrate them into broader decision-support tools and workflows.
+Conduct rigorous model evaluation and validation, ensuring accuracy, fairness, and real-world applicability.
+Prepare, curate, integrate, and manage datasets and data pipelines, ensuring data integrity, provenance, security, and ethical use.
+Develop high-quality, reliable software, apply strong engineering practices such as clean code, version control, and robust testing.
+Leverage LLMs, including prompting, retrieval, tool use, deployment, and adaptation or fine-tuning where appropriate to specific use cases.
+
+Teaching & Capacity Building
+
+Support internal AI literacy through, for instance, developing workshop sessions, guides, and playbooks to enable the Africa team to use LLM tools effectively in their own work.
+Mentor Africa team members in applying AI responsibly, with a focus on usability and adoption in Low- and Middle-Income Country (LMIC) contexts.
+
+Collaborate Across Teams and Partners
+
+Apply interdisciplinary problem-solving skills to translate AI research into practical solutions across multiple domains, combining AI with data engineering, analytics, optimization, or conventional software as needed.
+Communicate technical concepts effectively to both technical and non-technical partners, enabling shared understanding and informed decision-making.
+Collaborate with cross-functional teams across subject areas and geographies to co-design and deliver impactful solutions.
+Facilitate workshops and training sessions to demystify AI tools, enabling teams to directly apply solutions to their workflows.
+
+Advance Responsible and Ethical AI
+
+Embed equity, bias mitigation, and data privacy in all technical approaches.
+Ensure prototypes are designed with explainability in mind, making them accessible to non-technical partners.
+Align AI solutions with the Foundation’s mission and global health and development goals.
+Share thought leadership by integrating prior academic, research, or professional experiences to advance the responsible and impactful use of AI.
+ 
+
+Your Experience
+
+
+We are looking for fellows who represent a balance of technical competence and alignment with Foundation values.
+
+Education: Candidates must hold a bachelor’s or master’s degree (in Computer Science, Data Science, Engineering, Applied Math or relevant field).
+Experience: At least 2 years of experience applying AI solutions, preferably in health or agricultural systems.
+AI Technology: Strong foundation in modern AI/ML, including ML/AI modeling, model evaluation, and hands-on experience with LLMs, combined with software engineering and data skills needed to build end-to-end applied solutions. Evidence may come from applied coursework, research, internships, or early professional experience.
+AI Applications: Demonstrated interest in applying AI to fields such as health systems, public financial management, supply chain and logistics, with enthusiasm and literacy to use modern AI tools safely and pragmatically (direct AI research experience not required). Candidates should be comfortable learning across adjacent technical areas - such as data engineering, time-series analysis, optimization, information retrieval, or decision-support systems - as project needs evolve.
+Collaborative Mindset: Strong teamwork and adaptability, with experience working cross-functionally in complex environments.
+Communication Skills: Demonstrated ability to clearly articulate technical concepts and recommendations to both technical and non-technical audiences.
+Mission-Driven Ethos: Deep motivation to apply AI responsibly for public good, with alignment to equitable development and global health impact.
+Builder and Teacher Approach: Hands-on experience building prototypes with LLMs and other modern AI tools (e.g., using open-source tools or API-based platforms), with the judgment to connect AI components to the broader data and software systems needed for real-world use. Willingness to share findings openly and ability to teach and enable others, not just deliver technical outputs.
+
+Why you should consider becoming a Gates AI Fellow
+
+Apply AI where it matters most: Work on problems core to the Foundation’s mission—health, development, and education so more people can live healthy, productive lives.
+Drive outsized results in LMICs: Aim solutions at countries and communities the Foundation prioritize, where innovation can move the needle fastest.
+Advance digital public goods: Contribute to safe, inclusive digital public infrastructure and health innovation efforts where AI can accelerate access and equity. Partner with Program Strategy Teams to deliver tangible prototypes, tools, and analyses.
+Tap into a uniquely powerful network: Collaborate across multilaterals, NGOs, academia, and industry through the Foundation’s partnership model.
+Stand on a global platform: Benefit from the credibility and reach of a foundation funding work in over 140 countries.
+Lead from day one: Own high-priority projects with clear outcomes and partners.
+Grow faster with expert mentorship: Learn from leaders across AI, health, development, and policy while building a portfolio of real-world impact.
+ 
+
+#LI-AD1
+
+Hiring Requirements
+
+As part of our standard hiring process for new employees, employment will be contingent upon successful completion of a background check.
+
+Candidate Accommodations
+
+We’re committed to providing an inclusive and accessible hiring experience for all candidates. If you have a disability or medical condition and need an accommodation at any stage of the application or interview process—such as an ASL interpreter, alternative interview format, or physical accessibility support—we’re happy to help. Please contact HR@gatesfoundation.org with the position number and a brief description of your accommodation needs. Requests will be handled confidentially.
+
+Inclusion Statement
+
+We are dedicated to the belief that all lives have equal value. We strive for a global and cultural workplace that supports ever greater diversity, equity, and inclusion — of voices, ideas, and approaches — and we support this diversity through all our employment practices.
+
+All applicants and employees who are drawn to serve our mission will enjoy equality of opportunity and fair treatment without regard to race, color, age, religion, pregnancy, sex, sexual orientation, disability, gender identity, gender expression, national origin, genetic information, veteran status, marital status, and prior protected activity.

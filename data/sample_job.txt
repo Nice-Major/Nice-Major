@@ -1,0 +1,22 @@
+Title: Senior Cloud & DevOps Platform Engineer (AWS / Azure / Kubernetes)
+Company: Global FinTech Cloud Corp
+Location: Remote (Worldwide / EMEA / UTC+1 Synchronous) or Visa Sponsorship Available
+Engagement Type: Full-Time or B2B Corp-to-Corp (C2C) Contract
+
+About the Role:
+We are seeking a Senior DevOps & Cloud Platform Engineer with 5+ years of experience designing, automating, and operating resilient multi-cloud environments across Microsoft Azure and AWS.
+
+Key Responsibilities:
+- Architect and maintain CI/CD pipelines using GitHub Actions and Azure DevOps for automated multi-environment build, test, and release workflows.
+- Design and manage containerized microservices on Kubernetes (AKS and EKS) using Docker, Podman, and Azure Container Registry (ACR).
+- Provision reproducible cloud infrastructure using Infrastructure as Code (Terraform, ARM Templates, and Bicep).
+- Manage network security, VPCs, VNets, VPN Gateways, Private Endpoints, NSGs, and Azure Key Vault secrets/certificates.
+- Build comprehensive observability, logging, metrics, and distributed tracing frameworks using Azure Monitor, Application Insights, AWS CloudWatch, Prometheus, and Grafana to sustain a 99.9% uptime SLA.
+- Support AI/ML workloads including Azure OpenAI and Databricks on Kubernetes pods and nodes.
+- Collaborate with engineering teams across EMEA/UK time zones (UTC+0 / UTC+1 / CET) and provide L3 escalation root-cause analysis (RCA).
+
+Requirements:
+- Bachelor's degree in Computer Science or equivalent practical experience.
+- Active AWS Certified Solutions Architect – Associate, AWS Certified Developer – Associate, and Kubernetes and Cloud Native Associate (KCNA) certifications.
+- Strong scripting proficiency in Bash, Python, PowerShell, and YAML.
+- Eligible to work remotely from anywhere (including Nigeria / EMEA) or open to international visa sponsorship / B2B consultancy contract.

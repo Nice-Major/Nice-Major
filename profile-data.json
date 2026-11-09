@@ -5,11 +5,12 @@
     "lastName": "Aniekwe",
     "fullName": "John Victor Aniekwe",
     "email": "aniekwevictor9@gmail.com",
-    "phone": "+234 813 000 4114",
+    "phone": "+2348130004114",
     "location": "Lagos, Nigeria (UTC+1 / CET Synchronous)",
     "linkedin": "https://www.linkedin.com/in/victor-aniekwe",
     "githubProfile": "https://github.com/Nice-Major",
     "portfolioUrl": "https://nice-major.github.io/Nice-Major/",
+    "timeZone": "UTC+1 / CET Synchronous",
     "mobilityCategories": [
       "Global Remote from Anywhere (Nigeria / UTC+1 / CET / EMEA Synchronous)",
       "Visa-Sponsored Relocation (Canada GTS/LMIA, UK Skilled Worker, EU Blue Card, Spain 20-Day UGE-CE HQP / Digital Nomad Visa)",
@@ -17,8 +18,9 @@
     ],
     "education": {
       "degree": "Bachelor of Science (B.Sc.) in Computer Science",
-      "institution": "University of Nigeria",
-      "period": "2014 – 2018"
+      "institution": "University of Nigeria, Nsukka",
+      "period": "2014 – 2018",
+      "major": "Computer Science"
     },
     "languages": [
       "English (Professional Fluency — Written & Spoken)"
@@ -28,6 +30,9 @@
         "name": "Kubernetes and Cloud Native Associate (KCNA)",
         "issuer": "The Linux Foundation / CNCF",
         "status": "Active",
+        "year": "Active",
+        "verified": true,
+        "credlyTrackerLinkPolicy": "no_external_tracker_links",
         "tags": [
           "all",
           "devops",
@@ -40,6 +45,9 @@
         "name": "AWS Certified Solutions Architect – Associate",
         "issuer": "Amazon Web Services",
         "status": "Active",
+        "year": "Active",
+        "verified": true,
+        "credlyTrackerLinkPolicy": "no_external_tracker_links",
         "tags": [
           "all",
           "architect",
@@ -52,6 +60,9 @@
         "name": "AWS Certified Developer – Associate",
         "issuer": "Amazon Web Services",
         "status": "Active",
+        "year": "Active",
+        "verified": true,
+        "credlyTrackerLinkPolicy": "no_external_tracker_links",
         "tags": [
           "all",
           "devops",
@@ -63,6 +74,9 @@
         "name": "AWS Certified Cloud Practitioner",
         "issuer": "Amazon Web Services",
         "status": "Active",
+        "year": "Active",
+        "verified": true,
+        "credlyTrackerLinkPolicy": "no_external_tracker_links",
         "tags": [
           "all",
           "architect",
@@ -72,33 +86,61 @@
         ]
       },
       {
-        "name": "ITIL Foundation (Pursuing — Committed within 3 Months)",
-        "issuer": "AXELOS / PeopleCert",
-        "status": "In Progress",
+        "name": "Kubernetes and Cloud Native Essentials (KCNE)",
+        "issuer": "The Linux Foundation / CNCF",
+        "status": "Active",
+        "year": "Active",
+        "verified": true,
+        "credlyTrackerLinkPolicy": "no_external_tracker_links",
         "tags": [
           "all",
-          "support",
-          "infra"
+          "devops",
+          "architect",
+          "infra",
+          "support"
+        ]
+      },
+      {
+        "name": "Cisco Certified CyberOps Associate (CBROPS 200-201)",
+        "issuer": "Cisco",
+        "status": "Pursuing / In Progress",
+        "year": "In Progress",
+        "verified": false,
+        "credlyTrackerLinkPolicy": "no_external_tracker_links",
+        "tags": [
+          "all",
+          "devops",
+          "architect",
+          "infra",
+          "support"
         ]
       }
     ]
   },
   "kpiMetrics": [
     {
+      "metric": "Enterprise Cloud Uptime SLA",
       "value": "99.9%",
-      "label": "Enterprise Cloud Uptime SLA"
+      "label": "Enterprise Cloud Uptime SLA",
+      "context": "Sustained across enterprise Microsoft Azure & AWS compute, storage, and networking estates."
     },
     {
+      "metric": "First-Day L3 Issue Resolution",
       "value": "99%",
-      "label": "First-Day L3 Issue Resolution"
+      "label": "First-Day L3 Issue Resolution",
+      "context": "First-day resolution rate for Azure App Service (Linux/OSS & Windows) through structured RCA."
     },
     {
+      "metric": "AI Prediction Engine Accuracy",
       "value": ">60%",
-      "label": "AI Prediction Engine Accuracy"
+      "label": "AI Prediction Engine Accuracy",
+      "context": "Maintained on microservices deployed on Azure OpenAI and AKS pods/nodes."
     },
     {
+      "metric": "IaC Provisioning Reduction",
       "value": "<15 Min",
-      "label": "IaC Provisioning (Down from Hours)"
+      "label": "IaC Provisioning (Down from Hours)",
+      "context": "Reduced multi-environment provisioning and deployment time from hours using Terraform and ARM/Bicep."
     }
   ],
   "roleCategories": {
@@ -153,6 +195,7 @@
       "category": "AI-Augmented Engineering & MLOps",
       "items": [
         "Azure OpenAI Production Deployment (AKS Pods/Nodes)",
+        "Azure AI Foundry & Databricks Platform Integration",
         "GitHub Copilot Enterprise (CI/CD, IaC, Architecture & RCA)",
         "Microsoft Copilot in DfM (TsG & Wiki Knowledge Base Integration)",
         "AI Prediction & Storytelling Engine Infrastructure (>60% Accuracy)",
@@ -232,7 +275,9 @@
         "Observability Frameworks (Logs, Metrics, Distributed Traces)",
         "AWS CloudWatch, Azure Monitor, Application Insights, Prometheus/Grafana/Loki-Compatible Telemetry",
         "SLI / SLO / SLA Compliance (99.9% Uptime, 99% First-Day Resolution)",
-        "IAM Access Controls, Vulnerability Checks, Disaster Recovery & Backup Restoration",
+        "Cisco CyberOps Security Operations (SIEM Log Correlation, SOC Alert Triage, NIST SP 800-61 Incident Response, MITRE ATT&CK & Cyber Kill Chain Mapping)",
+        "Network Intrusion & Packet Analysis (IDS/IPS, Wireshark, tcpdump, NetFlow) & Host-Based Forensics / EDR Telemetry",
+        "IAM Access Controls, Zero-Trust & Defense-in-Depth Architecture, Azure Key Vault Secret/Certificate Management, CVSS Vulnerability Checks, Disaster Recovery & Backup Restoration",
         "Architecture Diagrams, SOPs & Operational Runbooks"
       ],
       "tags": [
@@ -256,7 +301,7 @@
       },
       "bullets": [
         {
-          "text": "Architected and deployed Azure OpenAI services alongside containerized application workloads running on Kubernetes pods and nodes in Azure to power an AI football prediction and storytelling platform achieving a >60% prediction success rate.",
+          "text": "Architected and deployed Azure OpenAI, Azure AI Foundry, and Databricks services alongside containerized application workloads running on Kubernetes (AKS) pods and nodes with Azure Container Registry (ACR) to power a Growth Intelligence & AI prediction platform achieving a >60% prediction success rate.",
           "tags": [
             "devops",
             "architect",
@@ -282,7 +327,7 @@
           ]
         },
         {
-          "text": "Configured and secured enterprise network topologies including VPCs, VNets, VPN connectivity, route tables, security groups, NSGs, and private endpoints for resilient microservices communication.",
+          "text": "Configured and secured enterprise network topologies including VPCs, VNets, VPN connectivity, route tables, security groups, NSGs, private endpoints, and Azure Key Vault secrets/certificates for resilient microservices communication.",
           "tags": [
             "infra",
             "architect",
@@ -348,7 +393,7 @@
           ]
         },
         {
-          "text": "Architected automated CI/CD deployment pipelines and reusable IaC templates plus Bash, Python, and PowerShell scripts, reducing multi-environment provisioning and deployment time from hours to minutes.",
+          "text": "Architected automated CI/CD deployment pipelines and reusable IaC templates plus Bash, Python, and PowerShell scripts, reducing multi-environment provisioning and deployment time from hours to minutes (<15 minutes).",
           "tags": [
             "devops",
             "architect",
@@ -366,6 +411,68 @@
           ]
         }
       ]
+    },
+    {
+      "company": "ACCESS BANK PLC",
+      "location": "Lagos State, Nigeria",
+      "period": "January 2021 – September 2021",
+      "titles": {
+        "devops": "IT Infrastructure & Operations Engineer",
+        "architect": "Enterprise IT Infrastructure Specialist",
+        "infra": "IT Operations & Systems Specialist",
+        "support": "IT Operation Specialist"
+      },
+      "bullets": [
+        {
+          "text": "Supported high-availability fintech banking systems, enterprise server operations, network connectivity, and incident resolution across mission-critical financial infrastructure.",
+          "tags": [
+            "support",
+            "infra",
+            "devops",
+            "architect"
+          ]
+        }
+      ]
+    },
+    {
+      "company": "STATE MINISTRY OF FINANCE, BUDGET & NATIONAL PLANNING",
+      "location": "Uyo, Akwa Ibom State, Nigeria",
+      "period": "March 2019 – March 2020",
+      "titles": {
+        "devops": "Systems & Network Administrator",
+        "architect": "IT Systems & Infrastructure Administrator",
+        "infra": "System Administrator",
+        "support": "System Administrator & IT Support Lead"
+      },
+      "bullets": [
+        {
+          "text": "Administered Windows and Linux server environments, local area networks, user access controls, system updates/patching, and backup operations for public-sector financial planning operations.",
+          "tags": [
+            "infra",
+            "support"
+          ]
+        }
+      ]
+    },
+    {
+      "company": "NIGERIAN AIRSPACE MANAGEMENT AGENCY (NAMA)",
+      "location": "Ikeja, Lagos State, Nigeria",
+      "period": "July 2016 – December 2016",
+      "titles": {
+        "devops": "IT Systems Support Associate",
+        "architect": "IT Infrastructure Support Associate",
+        "infra": "IT Support Specialist",
+        "support": "IT Support Specialist"
+      },
+      "bullets": [
+        {
+          "text": "Provided hardware, OS, and network troubleshooting, workstation provisioning, and operational IT support for aviation management systems.",
+          "tags": [
+            "support",
+            "infra"
+          ]
+        }
+      ]
     }
   ],
   "stepconSolutions": {
@@ -373,6 +480,14 @@
     "cacNumber": "RC - 8284984",
     "jurisdiction": "Corporate Affairs Commission (CAC), Federal Republic of Nigeria",
     "b2bConsultancyPitch": "Stepcon Solutions (RC - 8284984) provides immediate Corp-to-Corp (C2C) Cloud Architecture, DevSecOps, AI Platform Engineering, and L3 Escalation Support pods in synchronous CET/UK/EMEA business hours—eliminating international payroll tax friction, Employer-of-Record (EOR) markups, and visa lead times.",
-    "hardwareDivision": "Enterprise & Custom Computing Hardware Division: Procurement, QA diagnostics, WhatsApp-to-Inventory catalog automation, and corporate fulfillment for Consumer, Business, High-Performance, and Custom-Built Laptops and Desktops."
+    "hardwareDivision": "Enterprise & Custom Computing Hardware Division: Procurement, QA diagnostics, WhatsApp-to-Inventory catalog automation, and corporate fulfillment for Consumer, Business, High-Performance, and Custom-Built Laptops and Desktops.",
+    "serviceOfferings": [
+      "Cloud Solutions Architecture (AWS & Microsoft Azure)",
+      "DevSecOps & Automated CI/CD Pipelines",
+      "Kubernetes & Container Orchestration Pods",
+      "L3 Infrastructure & Application Escalation Support",
+      "Enterprise & Custom Computing Hardware Commerce"
+    ],
+    "synchronousHours": "UTC+1 / CET / UK / EMEA Synchronous"
   }
 }
