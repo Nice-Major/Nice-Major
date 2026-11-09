@@ -1,0 +1,3 @@
+# Career Automation & Stepcon Solutions Dependencies
+pytest>=8.0.0
+pypdf>=5.0.0
