@@ -9,6 +9,7 @@ and strict ATS single-column linear layout.
 
 from __future__ import annotations
 
+import html
 import os
 import re
 import shutil
@@ -230,8 +231,8 @@ def render_html_to_pdf_bytes(
             except Exception:
                 pass
 
-    # Pure-Python fallback
-    text_source = fallback_text or re.sub(r"<[^>]+>", " ", html_content)
+    # Pure-Python fallback (ensure all HTML entities like &amp; are unescaped)
+    text_source = fallback_text or html.unescape(re.sub(r"<[^>]+>", " ", html_content))
     pdf_bytes = render_text_to_pdf_bytes(text_source)
     if output_pdf_path:
         p = Path(output_pdf_path)

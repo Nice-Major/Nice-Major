@@ -182,6 +182,35 @@ def create_parser() -> argparse.ArgumentParser:
     stepcon_parser.add_argument("--dry-run", action="store_true", default=True, help="Operate in offline synthetic mode")
     stepcon_parser.add_argument("--json", action="store_true", help="Output results in JSON format")
 
+    # ------------------------------------------------------------------------
+    # Subcommand: rebuild (alias: render)
+    # ------------------------------------------------------------------------
+    rebuild_parser = subparsers.add_parser(
+        "rebuild",
+        aliases=["render"],
+        help="Rebuild opportunity PDFs directly from edited Markdown (.md) or HTML (.html) files.",
+        description="Recompiles edited application documents into verified ATS-compliant PDFs with page-budget enforcement.",
+    )
+    rebuild_parser.add_argument("--opportunity", "-o", type=str, default="Gates_Foundation", help="Opportunity directory name or keyword (e.g. Gates_Foundation)")
+    rebuild_parser.add_argument("--file", "-f", type=str, default=None, help="Direct path to an edited .md or .html file")
+    rebuild_parser.add_argument("--from", dest="from_format", choices=["md", "html", "all"], default="md", help="Source format to compile from (default: md)")
+    rebuild_parser.add_argument("--json", action="store_true", help="Output result summary in JSON format")
+
+    # ------------------------------------------------------------------------
+    # Subcommand: correct (alias: patch)
+    # ------------------------------------------------------------------------
+    correct_parser = subparsers.add_parser(
+        "correct",
+        aliases=["patch"],
+        help="Find and replace text across an opportunity package and immediately recompile PDFs.",
+        description="Fix typos or update phrases in .md, .html, and .txt files, and instantly regenerate verified PDFs.",
+    )
+    correct_parser.add_argument("--find", required=True, type=str, help="Target string or typo to search for")
+    correct_parser.add_argument("--replace", required=True, type=str, help="Replacement string")
+    correct_parser.add_argument("--opportunity", "-o", type=str, default="Gates_Foundation", help="Target opportunity directory name or pattern (default: Gates_Foundation)")
+    correct_parser.add_argument("--profile", action="store_true", help="Also apply correction to the Single Source of Truth profile-data.json")
+    correct_parser.add_argument("--json", action="store_true", help="Output result in JSON format")
+
     return parser
 
 
@@ -852,6 +881,78 @@ def evaluate_from_stdin(text: str) -> int:
         return 1
 
 
+def handle_rebuild(args: argparse.Namespace) -> int:
+    """Executes the 'rebuild' (alias: 'render') subcommand."""
+    from tailoring.rebuilder import rebuild_opportunity_package
+    target = args.opportunity or args.file or "Gates_Foundation"
+    from_fmt = getattr(args, "from_format", "md")
+
+    try:
+        res = rebuild_opportunity_package(target, from_format=from_fmt)
+        if getattr(args, "json", False):
+            print(json.dumps(res, indent=2))
+            return 0
+
+        print("\n" + "=" * 76)
+        print("CAREER AUTOMATION: APPLICATION DOCUMENT REBUILD ENGINE")
+        print("=" * 76)
+        print(f"Opportunity Directory: {res['opportunity_directory']}")
+        print(f"Source Format:         {from_fmt.upper()} -> PDF")
+        print("-" * 76)
+        print("Rebuilt Documents:")
+        for doc in res["rebuilt_documents"]:
+            print(f"  [{doc['type']}] Source: {doc['source']} -> PDF: {doc['pdf']} ({doc['pages']} pages) [{doc['status'].upper()}]")
+        print("=" * 76 + "\n")
+        return 0
+    except Exception as e:
+        sys.stderr.write(f"Error rebuilding application documents: {e}\n")
+        return 1
+
+
+def handle_correct(args: argparse.Namespace) -> int:
+    """Executes the 'correct' (alias: 'patch') subcommand."""
+    from tailoring.rebuilder import patch_opportunity_text
+    target = args.opportunity or "Gates_Foundation"
+    find_str = args.find
+    replace_str = args.replace
+
+    if not find_str or replace_str is None:
+        sys.stderr.write("Error: Both --find and --replace must be specified.\n")
+        return 1
+
+    try:
+        res = patch_opportunity_text(target, find_str, replace_str)
+        if getattr(args, "json", False):
+            print(json.dumps(res, indent=2))
+            return 0
+
+        print("\n" + "=" * 76)
+        print("CAREER AUTOMATION: FIND & REPLACE CORRECTION ENGINE")
+        print("=" * 76)
+        print(f"Opportunity Target: {res['folder']}")
+        print(f"Find String:        '{find_str}'")
+        print(f"Replacement:        '{replace_str}'")
+        print(f"Patched Files ({len(res['modified_files'])}): {', '.join(res['modified_files']) if res['modified_files'] else 'None (string not present)'}")
+        print("-" * 76)
+        print("Recompiled Application Documents:")
+        for doc in res["rebuilt"]:
+            print(f"  [{doc['type']}] Source: {doc['source']} -> PDF: {doc['pdf']} ({doc['pages']} pages)")
+
+        if getattr(args, "profile", False):
+            for p_path in (Path("data/profile-data.json"), Path("profile-data.json")):
+                if p_path.is_file():
+                    p_txt = p_path.read_text(encoding="utf-8")
+                    if find_str in p_txt:
+                        p_path.write_text(p_txt.replace(find_str, replace_str), encoding="utf-8")
+                        print(f"  [Single Source of Truth Updated]: {p_path.name}")
+
+        print("=" * 76 + "\n")
+        return 0
+    except Exception as e:
+        sys.stderr.write(f"Error executing correction: {e}\n")
+        return 1
+
+
 # ============================================================================
 # 4. Master CLI Runner
 # ============================================================================
@@ -897,6 +998,10 @@ def run_cli(args: Optional[List[str]] = None) -> int:
         return handle_audit(parsed_args)
     elif subcmd == "stepcon":
         return handle_stepcon(parsed_args)
+    elif subcmd in ("rebuild", "render"):
+        return handle_rebuild(parsed_args)
+    elif subcmd in ("correct", "patch"):
+        return handle_correct(parsed_args)
     else:
         sys.stderr.write(f"Error: Unrecognized subcommand '{subcmd}'. Run --help for usage.\n")
         return 2

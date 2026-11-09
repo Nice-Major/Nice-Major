@@ -272,3 +272,28 @@ class TestCliApplyAuditAndPdfGeneration:
         cert_names = [c.name for c in profile.certifications]
         assert any("Cisco Certified CyberOps Associate" in n for n in cert_names)
         assert not any("ITIL" in n for n in cert_names)
+
+    def test_rebuild_subcommand_from_markdown(self, capsys):
+        exit_code = run_cli(["rebuild", "--opportunity", "Gates_Foundation", "--json"])
+        assert exit_code == 0
+        captured = capsys.readouterr()
+        data = json.loads(captured.out)
+        assert "Gates_Foundation" in data["folder_name"]
+        assert len(data["rebuilt_documents"]) >= 2
+        for doc in data["rebuilt_documents"]:
+            assert doc["status"] == "success"
+            assert doc["pages"] in (1, 2, 3)
+
+    def test_correct_subcommand_find_and_replace(self, capsys):
+        exit_code = run_cli([
+            "correct",
+            "--opportunity", "Gates_Foundation",
+            "--find", "tcpdump",
+            "--replace", "tcpdump",
+            "--json",
+        ])
+        assert exit_code == 0
+        captured = capsys.readouterr()
+        data = json.loads(captured.out)
+        assert data["status"] == "success"
+        assert len(data["rebuilt"]) >= 2

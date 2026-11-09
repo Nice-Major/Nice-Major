@@ -1,65 +1,229 @@
-JOHN VICTOR ANIEKWE
-DevOps & AI Platform Engineer | Azure OpenAI, Databricks, Kubernetes (KCNA), AWS
-Lagos, Nigeria | +2348130004114 | aniekwevictor9@gmail.com
-LinkedIn: https://www.linkedin.com/in/victor-aniekwe | GitHub: https://github.com/Nice-Major | Portfolio: https://nice-major.github.io/Nice-Major/
-
-================================================================================
-PROFESSIONAL SUMMARY
-================================================================================
-DevOps and AI Platform Engineer with 5+ years of experience building and running cloud systems on Microsoft Azure and AWS. Currently deploys Azure OpenAI, Azure AI Foundry and Databricks workloads on Kubernetes (AKS) for an AI prediction platform that achieves more than 60% prediction accuracy. Previously sustained a 99.9% uptime SLA and a 99% first-day resolution rate as an L3 Azure engineer, and supported IT systems at Access Bank and the Akwa Ibom State Ministry of Finance, Budget & National Planning. Keen to apply production AI engineering to health financing and supply-chain decisions across Africa.
-
-================================================================================
-CORE SKILLS
-================================================================================
-- AI & Data: Azure OpenAI (LLMs), Azure AI Foundry, Databricks, knowledge-grounded AI workflows (Microsoft Copilot with internal guides and wikis), GitHub Copilot Enterprise, REST API integration
-- Cloud: Microsoft Azure (AKS, App Service, Functions, VNets, NSGs, Key Vault, Monitor, Application Insights); AWS (EC2, EKS, ECS, S3, Lambda, VPC, IAM, CloudWatch)
-- Containers & Automation: Kubernetes (AKS, EKS), Docker, Podman, Terraform, ARM/Bicep, GitHub Actions, Azure DevOps, Python, Bash, PowerShell
-- Reliability & Security: SLA/SLO monitoring, logs, metrics and traces, root-cause analysis, IAM least privilege, private endpoints, vulnerability checks and patching, backup and disaster recovery
-- Security Operations (Cisco CyberOps Associate, in progress): SOC alert triage, SIEM log analysis, NIST SP 800-61 incident response, MITRE ATT&CK, packet analysis (Wireshark, tcpdump)
-
-================================================================================
-PROFESSIONAL EXPERIENCE
-================================================================================
-DevOps Engineer / Platform Architect — GVOC
-Remote (United Kingdom) | Dec 2025 – Present
-- Deploy Azure OpenAI, Azure AI Foundry and Databricks services alongside containerized workloads on AKS and Azure Container Registry, powering a growth-intelligence and AI prediction platform with more than 60% prediction accuracy.
-- Design and maintain CI/CD pipelines (GitHub Actions, Azure DevOps) and reusable Terraform and ARM/Bicep modules covering compute, storage, containers, identity and security, using GitHub Copilot Enterprise to speed delivery.
-- Administer hybrid infrastructure across AWS and Azure, including health checks, capacity monitoring, OS tuning and cost optimization.
-- Secure network topologies (VPCs, VNets, VPN, route tables, NSGs, private endpoints) and manage secrets and certificates in Azure Key Vault.
-- Build logging, monitoring and alerting for business-intelligence and ML workloads; apply vulnerability checks, patching schedules and disaster-recovery procedures.
-- Automate documentation, architecture diagrams, SOPs and sprint tracking through REST API integrations with ClickUp.
-
-Technical Cloud Application Support Engineer – Azure App Service (Dev & OSS) L3 — TeKnowledge
-Lagos | Oct 2021 – Nov 2025
-- Supported enterprise Azure customers across compute, storage, security and hybrid networking (VNets, VPNs, NSGs), sustaining a 99.9% platform uptime SLA.
-- Resolved L3 escalations for Linux/OSS, container, networking and application configuration issues, reaching a 99% first-day resolution rate through structured root-cause analysis.
-- Integrated Microsoft Copilot into DfM incident workflows, using troubleshooting guides and internal wikis as knowledge sources to speed triage and improve customer satisfaction (CSAT).
-- Built CI/CD pipelines, IaC templates and Bash, Python and PowerShell scripts that cut multi-environment provisioning from hours to under 15 minutes.
-- Configured logs, metrics and traces in Azure Monitor, Application Insights and AWS CloudWatch, and documented resolutions in a shared knowledge base.
-
-IT Operation Specialist — Access Bank Plc
-Lagos | Jan 2021 – Sep 2021
-- Supported banking systems, enterprise servers, network connectivity and incident resolution for mission-critical financial infrastructure.
-
-System Administrator — Ministry of Finance, Budget & National Planning, Akwa Ibom State
-Uyo | Mar 2019 – Mar 2020
-- Administered Windows and Linux servers, local networks, user access, patching and backups supporting the ministry's budgeting and financial planning work.
-
-IT Support Specialist — Nigerian Airspace Management Agency (NAMA)
-Lagos | Jul 2016 – Dec 2016
-- Provided hardware, operating system and network support, and set up workstations for aviation management systems.
-
-================================================================================
-CERTIFICATIONS
-================================================================================
-- Kubernetes and Cloud Native Associate (KCNA) – The Linux Foundation
-- Kubernetes and Cloud Native Essentials (KCNE) – The Linux Foundation
-- AWS Certified Solutions Architect – Associate
-- AWS Certified Developer – Associate
-- AWS Certified Cloud Practitioner
-- Cisco Certified CyberOps Associate (200-201 CBROPS) – in progress
-
-================================================================================
-EDUCATION
-================================================================================
-- B.Sc. Computer Science – University of Nigeria, Nsukka | 2014 – 2018
+ 
+ 
+ 
+   
+   
+   John_Aniekwe_AI_Fellow_Africa_Regional_Offices_CV 
+   
+    * {
+      box-sizing: border-box;
+      font-variant-ligatures: none;
+      -webkit-font-variant-ligatures: none;
+    }
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      color: #1E293B;
+      background: #FFFFFF;
+      line-height: 1.48;
+      font-size: 13.2px;
+    }
+    .cv-container {
+      max-width: 820px;
+      margin: 0 auto;
+      background: #FFFFFF;
+      padding: 32px 42px;
+    }
+    header {
+      border-bottom: 2px solid #0F52BA;
+      padding-bottom: 12px;
+      margin-bottom: 16px;
+    }
+    h1 {
+      margin: 0 0 4px 0;
+      font-size: 25px;
+      font-weight: 800;
+      color: #0F172A;
+      letter-spacing: -0.3px;
+    }
+    .role-headline {
+      font-size: 14.5px;
+      font-weight: 700;
+      color: #0F52BA;
+      margin-bottom: 6px;
+    }
+    .contact-strip {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      font-size: 12px;
+      color: #475569;
+    }
+    .contact-strip a {
+      color: #0F52BA;
+      text-decoration: none;
+      font-weight: 500;
+    }
+    .mobility-note {
+      margin-top: 8px;
+      font-size: 11.5px;
+      color: #1D4ED8;
+      background: #EFF6FF;
+      padding: 6px 10px;
+      border-left: 3px solid #0F52BA;
+    }
+    section {
+      margin-bottom: 15px;
+    }
+    h2 {
+      font-size: 13px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: #0F172A;
+      border-bottom: 1.5px solid #E2E8F0;
+      padding-bottom: 4px;
+      margin: 14px 0 8px 0;
+    }
+    p {
+      margin: 0 0 6px 0;
+      text-align: justify;
+    }
+    ul {
+      margin: 3px 0 6px 0;
+      padding-left: 18px;
+    }
+    li {
+      margin-bottom: 3.5px;
+    }
+    .exp-item {
+      margin-bottom: 12px;
+      page-break-inside: avoid;
+    }
+    .exp-header {
+      font-size: 13px;
+      margin-bottom: 3px;
+    }
+    .exp-role {
+      font-weight: 700;
+      color: #0F172A;
+    }
+    .exp-company {
+      font-weight: 700;
+      color: #0F52BA;
+    }
+    .exp-dates {
+      font-size: 12px;
+      color: #64748B;
+      float: right;
+    }
+    @media print {
+      @page {
+        size: A4;
+        margin: 14mm 14mm 14mm 14mm;
+      }
+      body {
+        background: #FFFFFF;
+        font-size: 12.8px;
+      }
+      .cv-container {
+        padding: 0;
+        max-width: 100%;
+        border: none;
+        box-shadow: none;
+      }
+      .exp-item {
+        page-break-inside: avoid;
+      }
+    }
+   
+ 
+ 
+   
+     
+       John Victor Aniekwe 
+       DevOps &amp; AI Platform Engineer | Azure OpenAI, Databricks, Kubernetes (KCNA), AWS 
+        Lagos, Nigeria  +2348130004114   aniekwevictor9@gmail.com    linkedin.com/in/victor-aniekwe    github.com/Nice-Major    nice-major.github.io/Nice-Major   
+      
+     
+     
+       Professional Summary 
+     DevOps and AI Platform Engineer with 5+ years of experience building and running cloud systems on Microsoft Azure and AWS. Currently deploys Azure OpenAI, Azure AI Foundry and Databricks workloads on Kubernetes (AKS) for an AI prediction platform that achieves more than 60% prediction accuracy. Previously sustained a 99.9% uptime SLA and a 99% first-day resolution rate as an L3 Azure engineer, and supported IT systems at Access Bank and the Akwa Ibom State Ministry of Finance, Budget & National Planning. Keen to apply production AI engineering to health financing and supply-chain decisions across Africa. 
+     --- 
+     
+       Core Skills 
+     
+        AI & Data:  Azure OpenAI (LLMs), Azure AI Foundry, Databricks, knowledge-grounded AI workflows (Microsoft Copilot with internal guides and wikis), GitHub Copilot Enterprise, REST API integration 
+        Cloud:  Microsoft Azure (AKS, App Service, Functions, VNets, NSGs, Key Vault, Monitor, Application Insights); AWS (EC2, EKS, ECS, S3, Lambda, VPC, IAM, CloudWatch) 
+        Containers & Automation:  Kubernetes (AKS, EKS), Docker, Podman, Terraform, ARM/Bicep, GitHub Actions, Azure DevOps, Python, Bash, PowerShell 
+        Reliability & Security:  SLA/SLO monitoring, logs, metrics and traces, root-cause analysis, IAM least privilege, private endpoints, vulnerability checks and patching, backup and disaster recovery 
+        Security Operations (Cisco CyberOps Associate, in progress):  SOC alert triage, SIEM log analysis, NIST SP 800-61 incident response, MITRE ATT&CK, packet analysis (Wireshark, tcpdump) 
+     
+     --- 
+     
+       Professional Experience 
+     
+         
+           DevOps Engineer / Platform Architect  —  GVOC 
+           *Remote (United Kingdom) | Dec 2025 – Present* 
+         
+     
+       Deploy Azure OpenAI, Azure AI Foundry and Databricks services alongside containerized workloads on AKS and Azure Container Registry, powering a growth-intelligence and AI prediction platform with more than 60% prediction accuracy. 
+       Design and maintain CI/CD pipelines (GitHub Actions, Azure DevOps) and reusable Terraform and ARM/Bicep modules covering compute, storage, containers, identity and security, using GitHub Copilot Enterprise to speed delivery. 
+       Administer hybrid infrastructure across AWS and Azure, including health checks, capacity monitoring, OS tuning and cost optimization. 
+       Secure network topologies (VPCs, VNets, VPN, route tables, NSGs, private endpoints) and manage secrets and certificates in Azure Key Vault. 
+       Build logging, monitoring and alerting for business-intelligence and ML workloads; apply vulnerability checks, patching schedules and disaster-recovery procedures. 
+       Automate documentation, architecture diagrams, SOPs and sprint tracking through REST API integrations with ClickUp. 
+     
+     
+     
+         
+           Technical Cloud Application Support Engineer – Azure App Service (Dev &amp; OSS) L3  —  TeKnowledge 
+           *Lagos | Oct 2021 – Nov 2025* 
+         
+     
+       Supported enterprise Azure customers across compute, storage, security and hybrid networking (VNets, VPNs, NSGs), sustaining a 99.9% platform uptime SLA. 
+       Resolved L3 escalations for Linux/OSS, container, networking and application configuration issues, reaching a 99% first-day resolution rate through structured root-cause analysis. 
+       Integrated Microsoft Copilot into DfM incident workflows, using troubleshooting guides and internal wikis as knowledge sources to speed triage and improve customer satisfaction (CSAT). 
+       Built CI/CD pipelines, IaC templates and Bash, Python and PowerShell scripts that cut multi-environment provisioning from hours to under 15 minutes. 
+       Configured logs, metrics and traces in Azure Monitor, Application Insights and AWS CloudWatch, and documented resolutions in a shared knowledge base. 
+     
+     
+     
+         
+           IT Operation Specialist  —  Access Bank Plc 
+           *Lagos | Jan 2021 – Sep 2021* 
+         
+     
+       Supported banking systems, enterprise servers, network connectivity and incident resolution for mission-critical financial infrastructure. 
+     
+     
+     
+         
+           System Administrator  —  Ministry of Finance, Budget &amp; National Planning, Akwa Ibom State 
+           *Uyo | Mar 2019 – Mar 2020* 
+         
+     
+       Administered Windows and Linux servers, local networks, user access, patching and backups supporting the ministry's budgeting and financial planning work. 
+     
+     
+     
+         
+           IT Support Specialist  —  Nigerian Airspace Management Agency (NAMA) 
+           *Lagos | Jul 2016 – Dec 2016* 
+         
+     
+       Provided hardware, operating system and network support, and set up workstations for aviation management systems. 
+     
+     --- 
+     
+     
+       Certifications 
+     
+       Kubernetes and Cloud Native Associate (KCNA) – The Linux Foundation 
+       Kubernetes and Cloud Native Essentials (KCNE) – The Linux Foundation 
+       AWS Certified Solutions Architect – Associate 
+       AWS Certified Developer – Associate 
+       AWS Certified Cloud Practitioner 
+       Cisco Certified CyberOps Associate (200-201 CBROPS) – in progress 
+     
+     --- 
+     
+       Education 
+     
+        B.Sc. Computer Science  – University of Nigeria, Nsukka | 2014 – 2018 
+     
+   
+ 
+ 
