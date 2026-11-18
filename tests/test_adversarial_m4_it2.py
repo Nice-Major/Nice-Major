@@ -112,8 +112,8 @@ def synthetic_opportunity() -> Dict[str, Any]:
 class TestConcurrencyAndDuplicateRunAttacks:
     """Stress tests covering concurrent dispatches, duplicate dates, --force flag, and log corruption."""
 
-    def test_sequential_duplicate_runs_idempotency_prevents_reexecution(self, tmp_path):
-        """Verify that running sequentially on the same date dispatches once and skips on the second run."""
+    def test_repeated_dry_runs_do_not_mark_a_live_dispatch(self, tmp_path):
+        """A dry-run export must not block a later live dispatch on the same date."""
         test_date = "2026-11-15"
         out_dir = tmp_path / "seq_test"
         out_dir.mkdir(parents=True, exist_ok=True)
@@ -126,17 +126,17 @@ class TestConcurrencyAndDuplicateRunAttacks:
         eml_files_after_1 = list(out_dir.rglob("*.eml"))
         assert len(eml_files_after_1) >= 1
 
-        # Second run: should be skipped
+        # A second dry run is also an export, not a completed live dispatch.
         res2 = run_daily_job(dry_run=True, date_str=test_date, output_dir=str(out_dir), force=False)
-        assert res2.get("status") == "skipped"
-        assert f"Already dispatched on {test_date}" in res2.get("reason", "")
+        assert res2.get("status") == "success"
 
-        # Verify no additional .eml files were created
+        # Verify the second export was preserved, without recording a live dispatch.
         eml_files_after_2 = list(out_dir.rglob("*.eml"))
-        assert len(eml_files_after_2) == len(eml_files_after_1)
+        assert len(eml_files_after_2) > len(eml_files_after_1)
+        assert not (out_dir / "state" / "dispatch_log.json").exists()
 
     def test_force_flag_bypasses_idempotency_and_creates_distinct_eml(self, tmp_path):
-        """Verify that --force allows repeated execution on the same date without overwriting existing files."""
+        """Verify that --force preserves separate dry-run exports for the same date."""
         test_date = "2026-11-16"
         out_dir = tmp_path / "force_test"
         out_dir.mkdir(parents=True, exist_ok=True)
@@ -158,16 +158,11 @@ class TestConcurrencyAndDuplicateRunAttacks:
         eml_files = list(out_dir.rglob("*.eml"))
         assert len(eml_files) >= 3
 
-        # Subsequent run without force must still be skipped
+        # Dry runs are not recorded as live dispatches, so an unforced dry run exports too.
         res4 = run_daily_job(dry_run=True, date_str=test_date, output_dir=str(out_dir), force=False)
-        assert res4.get("status") == "skipped"
-
-        # Inspect dispatch_log.json
-        log_file = out_dir / "dispatch_log.json"
-        assert log_file.exists()
-        with open(log_file, "r", encoding="utf-8") as f:
-            log_entries = json.load(f)
-        assert len(log_entries) >= 3
+        assert res4.get("status") == "success"
+        assert len(list(out_dir.rglob("*.eml"))) >= 4
+        assert not (out_dir / "state" / "dispatch_log.json").exists()
 
     def test_simultaneous_concurrent_runs_race_condition_behavior(self, tmp_path):
         """

@@ -7,7 +7,7 @@ Verifies:
 1. Multi-part MIME email construction and headers.
 2. UTF-8 non-ASCII subject and recipient handling.
 3. Inline CSS styling and zero external stylesheet links.
-4. Executive metrics ("99.9%" and "99%") and opportunity links presence.
+4. Profile-listed metrics and opportunity links presence.
 5. Dry-run .eml export and credential protection.
 6. Attachment size limit guardrails.
 7. Crontab 5-field syntax validation.
@@ -31,6 +31,7 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 from config.settings import get_settings
+from ingestion.models import CandidateInfo, CandidateProfile
 from dispatch.digest import (
     build_digest_email,
     format_digest_html,
@@ -41,7 +42,13 @@ from dispatch.mailer import (
     export_eml,
     send_email,
 )
+from scheduler.opportunity_history import (
+    filter_new_opportunities,
+    record_dispatched_opportunities,
+)
+from scheduler.workflow_feedback import role_preference_adjustments, record_role_feedback
 from scheduler.daily_dispatch import (
+    _select_employer_diverse_items,
     check_daily_idempotency,
     execute_combined_daily_run,
     record_dispatch,
@@ -118,6 +125,25 @@ class TestDigestFormatting:
         text_out = format_digest_text([])
         assert "No opportunities matched" in text_out
 
+    def test_digest_does_not_invent_candidate_metrics(self):
+        profile = CandidateProfile(candidate=CandidateInfo(
+            full_name="Taylor Example",
+            first_name="Taylor",
+            last_name="Example",
+            email="",
+            phone="",
+            location="",
+            commitment="",
+        ))
+
+        html_out = format_digest_html([], candidate=profile)
+        text_out = format_digest_text([], candidate=profile)
+
+        assert "99.9%" not in html_out + text_out
+        assert "99%" not in html_out + text_out
+        assert "Terraform" not in html_out + text_out
+        assert "Stepcon Solutions (RC - 8284984)" not in html_out + text_out
+
     def test_format_digest_renders_score_breakdown(self, sample_opportunity):
         html_out = format_digest_html([sample_opportunity])
         assert "Skills" in html_out
@@ -154,11 +180,33 @@ class TestMIMEEmailBuilder:
     def test_build_digest_email_with_attachments(self, sample_opportunity):
         attachments = [
             ("John_Victor_Aniekwe_DevOps_CV.pdf", b"%PDF-1.4 test cv bytes"),
-            ("John_Victor_Aniekwe_Cover_Letter.txt", b"Test cover letter content"),
+            ("John_Victor_Aniekwe_Cover_Letter.docx", b"Test editable letter content"),
         ]
         msg = build_digest_email([sample_opportunity], attachments=attachments)
         payloads = msg.get_payload()
         assert len(payloads) >= 3  # alternative container + 2 attachments
+        attachment_types = {
+            part.get_filename(): part.get_content_type()
+            for part in msg.walk()
+            if part.get_filename()
+        }
+        assert attachment_types["John_Victor_Aniekwe_DevOps_CV.pdf"] == "application/pdf"
+        assert (
+            attachment_types["John_Victor_Aniekwe_Cover_Letter.docx"]
+            == "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        )
+
+    def test_attachment_filenames_exclude_paths_without_rewriting_names(self, sample_opportunity):
+        msg = build_digest_email(
+            [sample_opportunity],
+            attachments=[(r"C:\temp\Victor-Aniekwe-CV.PDF", b"pdf"), ("editable-CV.MD", "# CV")],
+        )
+        filenames = {
+            part.get_filename()
+            for part in msg.walk()
+            if part.get_filename()
+        }
+        assert filenames == {"Victor-Aniekwe-CV.PDF", "editable-CV.MD"}
 
     def test_build_digest_email_empty_list_valid_mime(self):
         msg = build_digest_email([])
@@ -210,6 +258,54 @@ class TestMailer:
 class TestSchedulerPipeline:
     """Verifies cron validation, idempotency, and workflow prioritization."""
 
+    def test_explicit_live_run_overrides_offline_source_default(self, tmp_path, monkeypatch):
+        import scheduler.daily_dispatch as daily_dispatch
+        from ingestion.parser import load_profile
+
+        calls = {}
+        monkeypatch.setattr(
+            daily_dispatch,
+            "fetch_opportunities",
+            lambda **kwargs: calls.update(kwargs) or [],
+        )
+        monkeypatch.setattr(daily_dispatch, "filter_opportunities", lambda *args, **kwargs: [])
+        monkeypatch.setattr(daily_dispatch, "filter_new_opportunities", lambda *args, **kwargs: ([], 0))
+        monkeypatch.setattr(daily_dispatch, "verify_opportunities", lambda *args, **kwargs: [])
+        monkeypatch.setattr(daily_dispatch, "send_email", lambda *args, **kwargs: "sent")
+        monkeypatch.setattr(daily_dispatch, "record_dispatched_opportunities", lambda *args, **kwargs: None)
+        monkeypatch.setattr(daily_dispatch, "generate_daily_workflow_review", lambda **kwargs: {})
+
+        result = daily_dispatch.execute_candidate_career_workflow(
+            profile=load_profile(allow_fallback=False),
+            date_str="2026-11-18",
+            dry_run=False,
+            output_dir=tmp_path,
+        )
+
+        assert result["status"] == "success"
+        assert calls["dry_run"] is False
+        assert calls["offline_mode"] is False
+
+    def test_email_selection_keeps_highest_scored_role_per_company(self):
+        items = [
+            ({"company": "Supabase", "title": "Support Engineer EMEA"}, 99),
+            ({"company": " supabase ", "title": "Support Engineer APAC"}, 98),
+            ({"company": "New Relic", "title": "Cloud Engineer"}, 95),
+            ({"company": "Sentry", "title": "Platform Engineer"}, 92),
+            ({"company": "", "title": "Unknown employer role 1"}, 90),
+            ({"company": "", "title": "Unknown employer role 2"}, 89),
+        ]
+
+        selected = _select_employer_diverse_items(items, limit=4)
+
+        assert [item[0]["title"] for item in selected] == [
+            "Support Engineer EMEA",
+            "Cloud Engineer",
+            "Platform Engineer",
+            "Unknown employer role 1",
+        ]
+        assert _select_employer_diverse_items(items, limit=0) == []
+
     def test_validate_cron_expression_5_fields(self):
         assert validate_cron_expression("0 7 * * *") is True
         assert validate_cron_expression("*/15 * * * *") is True
@@ -244,6 +340,43 @@ class TestSchedulerPipeline:
         result = run_daily_job(dry_run=True, date_str="2026-11-07", output_dir=str(tmp_path), force=True)
         assert result is not None
         assert result.get("status") == "success"
+        career = result["candidate_career"]
+        assert all(Path(package["cv_md_path"]).is_file() for package in career["tailored_packages"])
+        assert all(Path(package["letter_md_path"]).is_file() for package in career["tailored_packages"])
+        assert all(Path(package["cv_docx_path"]).is_file() for package in career["tailored_packages"])
+        assert all(Path(package["letter_docx_path"]).is_file() for package in career["tailored_packages"])
+        assert all("-" not in package["cv_filename"] for package in career["tailored_packages"])
+        assert all(package["cv_filename"].startswith("John Aniekwe ") for package in career["tailored_packages"])
+
+    def test_opportunity_history_persists_delivered_jobs_and_normalizes_tracking_urls(self, tmp_path):
+        state_file = tmp_path / "state" / "opportunity_history.json"
+        first = {
+            "title": "Cloud Engineer",
+            "company": "Example Corp",
+            "url": "https://jobs.example.com/role/42?utm_source=digest",
+        }
+        duplicate = {
+            "title": "Cloud Engineer",
+            "company": "Example Corp",
+            "url": "https://JOBS.example.com/role/42/",
+        }
+
+        assert filter_new_opportunities([first], state_file) == ([first], 0)
+        assert record_dispatched_opportunities([first], state_file, "2026-11-07") == 1
+        assert filter_new_opportunities([duplicate], state_file) == ([], 1)
+
+    def test_role_feedback_only_adjusts_order_after_three_explicit_interest_votes(self, tmp_path):
+        state_file = tmp_path / "state" / "role_feedback.json"
+        record_role_feedback(state_file, "Cloud Engineer", "interested")
+        record_role_feedback(state_file, "Cloud Engineer", "not_interested")
+        assert role_preference_adjustments({"roles": {"Cloud Engineer": {
+            "interested": 1,
+            "not_interested": 1,
+        }}}) == {}
+
+        data = record_role_feedback(state_file, "Cloud Engineer", "interested")
+        assert role_preference_adjustments(data) == {"Cloud Engineer": 1.7}
+        assert record_role_feedback(state_file, "Cloud Engineer", "interview")["roles"]["Cloud Engineer"]["interview"] == 1
 
 
 # ============================================================================

@@ -25,6 +25,10 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: career-state-main
+  cancel-in-progress: false
+
 jobs:
   dispatch:
     name: Execute Daily 8:00 AM Dispatch Pipeline
@@ -34,6 +38,14 @@ jobs:
     steps:
       - name: Checkout Repository (Nice-Major/Nice-Major)
         uses: actions/checkout@v4
+
+      - name: Restore persisted dispatch and feedback state
+        uses: actions/cache@v4
+        with:
+          path: output/state/
+          key: career-state-${{ runner.os }}-${{ github.run_id }}
+          restore-keys: |
+            career-state-${{ runner.os }}-
 
       - name: Set up Python 3.11
         uses: actions/setup-python@v5
@@ -62,6 +74,9 @@ jobs:
           SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD || '' }}
           SMTP_USE_TLS: ${{ secrets.SMTP_USE_TLS || 'true' }}
           SMTP_SENDER: ${{ secrets.SMTP_SENDER || 'aniekwevictor9@gmail.com' }}
+          GREENHOUSE_BOARD_TOKENS: ${{ vars.GREENHOUSE_BOARD_TOKENS || '' }}
+          LEVER_SITE_NAMES: ${{ vars.LEVER_SITE_NAMES || '' }}
+          ASHBY_BOARD_NAMES: ${{ vars.ASHBY_BOARD_NAMES || '' }}
         run: |
           if [ -n "$SMTP_PASSWORD" ] && [ "${{ github.event.inputs.dry_run }}" != "true" ]; then
             export DRY_RUN=false
@@ -86,6 +101,6 @@ jobs:
             output/packages/
             output/proposals/
             output/audit/
-            output/dispatch_log.json
+            output/state/dispatch_log.json
           retention-days: 30
           if-no-files-found: ignore

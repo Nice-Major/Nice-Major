@@ -9,7 +9,11 @@ from __future__ import annotations
 import json
 import os
 import sys
+from argparse import Namespace
+from email import policy
+from email.parser import BytesParser
 from pathlib import Path
+from zipfile import ZipFile
 import pytest
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
@@ -19,6 +23,7 @@ if str(PROJECT_ROOT) not in sys.path:
 from cli.main import (
     create_parser,
     evaluate_from_stdin,
+    handle_digest,
     handle_eval,
     handle_tailor,
     run_cli,
@@ -52,6 +57,33 @@ class TestCliArgumentParser:
     def test_unrecognized_subcommand_returns_nonzero(self):
         exit_code = run_cli(["invalid_subcmd_999"])
         assert exit_code != 0
+
+    def test_digest_live_mode_passes_supported_dispatch_arguments(self, monkeypatch, capsys):
+        import scheduler.daily_dispatch as daily_dispatch
+        captured = {}
+
+        def fake_run_daily_job(**kwargs):
+            captured.update(kwargs)
+            return {"status": "success"}
+
+        monkeypatch.setattr(daily_dispatch, "run_daily_job", fake_run_daily_job)
+        args = Namespace(
+            live=True,
+            date="2026-11-18",
+            output_dir="output/live_test",
+            force=True,
+            per_opportunity=True,
+        )
+
+        assert handle_digest(args) == 0
+        assert captured == {
+            "dry_run": False,
+            "date_str": "2026-11-18",
+            "output_dir": "output/live_test",
+            "force": True,
+            "per_opportunity_email": True,
+        }
+        assert json.loads(capsys.readouterr().out) == {"status": "success"}
 
 
 class TestCliEvalSubcommand:
@@ -256,7 +288,34 @@ class TestCliApplyAuditAndPdfGeneration:
         assert data["letter_pdf_path"].endswith(".pdf")
         assert Path(data["cv_pdf_path"]).is_file()
         assert Path(data["letter_pdf_path"]).is_file()
+        assert Path(data["cv_md_path"]).is_file()
+        assert Path(data["letter_md_path"]).is_file()
+        assert Path(data["cv_docx_path"]).is_file()
+        assert Path(data["letter_docx_path"]).is_file()
+        assert Path(data["cv_pdf_path"]).name == "John Aniekwe Gates Foundation CV.pdf"
+        with ZipFile(data["cv_docx_path"]) as document:
+            assert "John Victor Aniekwe" in document.read("word/document.xml").decode("utf-8")
         assert data["email_dispatched"] is True
+        email_files = list(out_dir.glob("*.eml"))
+        assert len(email_files) == 1
+        message = BytesParser(policy=policy.default).parsebytes(email_files[0].read_bytes())
+        attachment_names = {part.get_filename() for part in message.iter_attachments()}
+        assert Path(data["cv_pdf_path"]).with_suffix(".docx").name in attachment_names
+        assert Path(data["letter_pdf_path"]).with_suffix(".docx").name in attachment_names
+
+    def test_feedback_cli_records_aggregate_preference(self, tmp_path, capsys):
+        state_file = tmp_path / "feedback.json"
+        exit_code = run_cli([
+            "feedback",
+            "--role", "Cloud Engineer",
+            "--outcome", "interested",
+            "--state-file", str(state_file),
+        ])
+
+        assert exit_code == 0
+        data = json.loads(capsys.readouterr().out)
+        assert data["recorded_counts"] == {"interested": 1}
+        assert json.loads(state_file.read_text(encoding="utf-8"))["roles"]["Cloud Engineer"]["interested"] == 1
 
     def test_audit_subcommand_json_and_markdown(self, tmp_path, capsys):
         exit_code = run_cli(["audit", "--output-dir", str(tmp_path), "--json"])

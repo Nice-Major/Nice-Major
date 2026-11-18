@@ -37,13 +37,19 @@ from ingestion.job_fetcher import (
     resolve_job_input,
 )
 from ingestion.models import CandidateProfile, StepconProfile
-from ingestion.parser import load_profile, load_profile_from_dict
-from ingestion.text_utils import safe_filename
+from ingestion.parser import find_profile_data_path, load_profile, load_profile_from_dict
+from ingestion.text_utils import application_filename, safe_filename
 from tailoring.cv_tailor import generate_cv, generate_cv_pdf, get_cv_filename
 from tailoring.letter_tailor import (
     generate_cover_letter,
     generate_cover_letter_pdf,
     get_letter_filename,
+)
+from tailoring.pdf_renderer import render_markdown_to_docx_bytes
+from scheduler.workflow_feedback import (
+    CANONICAL_TARGET_ROLES,
+    FEEDBACK_OUTCOMES,
+    record_role_feedback,
 )
 
 logger = logging.getLogger("cli.main")
@@ -163,6 +169,18 @@ def create_parser() -> argparse.ArgumentParser:
     )
     audit_parser.add_argument("--output-dir", type=str, default=None, help="Directory to save daily workflow audit reports")
     audit_parser.add_argument("--json", action="store_true", help="Output workflow audit report as JSON")
+
+    # ------------------------------------------------------------------------
+    # Subcommand: feedback
+    # ------------------------------------------------------------------------
+    feedback_parser = subparsers.add_parser(
+        "feedback",
+        help="Record explicit role interest or application outcome feedback.",
+        description="Record an aggregate role-level signal; profile facts are never changed automatically.",
+    )
+    feedback_parser.add_argument("--role", required=True, choices=CANONICAL_TARGET_ROLES)
+    feedback_parser.add_argument("--outcome", required=True, choices=FEEDBACK_OUTCOMES)
+    feedback_parser.add_argument("--state-file", type=str, default=None, help="Override the feedback state JSON path")
 
     # ------------------------------------------------------------------------
     # Subcommand: stepcon
@@ -318,7 +336,7 @@ def handle_eval(args: argparse.Namespace) -> int:
 
     # Load profile
     try:
-        profile = load_profile(args.profile, allow_fallback=True)
+        profile = load_profile(args.profile)
     except Exception as e:
         sys.stderr.write(f"Error loading candidate profile: {e}\n")
         return 1
@@ -396,7 +414,7 @@ def handle_tailor(args: argparse.Namespace) -> int:
 
     # Load candidate profile
     try:
-        profile = load_profile(args.profile, allow_fallback=True)
+        profile = load_profile(args.profile)
     except Exception as e:
         sys.stderr.write(f"Error loading candidate profile: {e}\n")
         return 1
@@ -511,7 +529,7 @@ def handle_apply(args: argparse.Namespace) -> int:
         return 1
 
     try:
-        profile = load_profile(args.profile, allow_fallback=True)
+        profile = load_profile(args.profile)
     except Exception as e:
         sys.stderr.write(f"Error loading candidate profile: {e}\n")
         return 1
@@ -545,6 +563,8 @@ def handle_apply(args: argparse.Namespace) -> int:
             company_name=company_name,
             output_format="md",
         )
+        cv_docx = render_markdown_to_docx_bytes(cv_md)
+        letter_docx = render_markdown_to_docx_bytes(letter_md)
         try:
             cv_html = generate_cv(profile, job_text=jd_text, target_role=role_title, output_format="html")
             letter_html = generate_cover_letter(
@@ -558,10 +578,12 @@ def handle_apply(args: argparse.Namespace) -> int:
             cv_html = ""
             letter_html = ""
 
-        cv_pdf_name = get_cv_filename(profile, target_role=role_title, output_format="pdf", company_name=company_name)
-        letter_pdf_name = get_letter_filename(profile, target_role=role_title, output_format="pdf", company_name=company_name)
-        cv_md_name = get_cv_filename(profile, target_role=role_title, output_format="md", company_name=company_name)
-        letter_md_name = get_letter_filename(profile, target_role=role_title, output_format="md", company_name=company_name)
+        cv_pdf_name = application_filename(profile, company_name, "CV")
+        letter_pdf_name = application_filename(profile, company_name, "Cover Letter")
+        cv_docx_name = application_filename(profile, company_name, "CV", "docx")
+        letter_docx_name = application_filename(profile, company_name, "Cover Letter", "docx")
+        cv_md_name = application_filename(profile, company_name, "CV", "md")
+        letter_md_name = application_filename(profile, company_name, "Cover Letter", "md")
 
         # Store in dedicated opportunity folder with deduplication check
         eval_dict = {
@@ -588,6 +610,10 @@ def handle_apply(args: argparse.Namespace) -> int:
             source_url=fetched.url or "",
             location=fetched.location or "",
             check_deduplication=True,
+            cv_docx_bytes=cv_docx,
+            letter_docx_bytes=letter_docx,
+            cv_docx_filename=cv_docx_name,
+            letter_docx_filename=letter_docx_name,
         )
 
         is_reused = bool(pkg_res.get("reused"))
@@ -597,6 +623,8 @@ def handle_apply(args: argparse.Namespace) -> int:
         letter_pdf_path = pkg_res.get("letter_pdf_path") or (opp_folder / letter_pdf_name)
         cv_md_path = opp_folder / cv_md_name
         letter_md_path = opp_folder / letter_md_name
+        cv_docx_path = pkg_res.get("cv_docx_path") or (opp_folder / cv_docx_name)
+        letter_docx_path = pkg_res.get("letter_docx_path") or (opp_folder / letter_docx_name)
 
         # If caller specified a custom output_dir, ensure root copy also exists for test compatibility
         if args.output_dir:
@@ -638,6 +666,8 @@ def handle_apply(args: argparse.Namespace) -> int:
                 attachments=[
                     (cv_pdf_name, cv_pdf_bytes),
                     (letter_pdf_name, letter_pdf_bytes),
+                    (cv_docx_name, cv_docx),
+                    (letter_docx_name, letter_docx),
                 ],
             )
             email_result_path = send_email(
@@ -647,7 +677,8 @@ def handle_apply(args: argparse.Namespace) -> int:
             )
             email_dispatched = bool(email_result_path)
         except Exception as e:
-            logger.warning(f"Email dispatch warning: {e}")
+            sys.stderr.write(f"Error sending application package email: {e}\n")
+            return 1
 
     summary = {
         "source_type": fetched.source_type,
@@ -666,6 +697,8 @@ def handle_apply(args: argparse.Namespace) -> int:
         "letter_pdf_path": str(letter_pdf_path.resolve()),
         "cv_md_path": str(cv_md_path.resolve()),
         "letter_md_path": str(letter_md_path.resolve()),
+        "cv_docx_path": str(cv_docx_path.resolve()),
+        "letter_docx_path": str(letter_docx_path.resolve()),
         "email_dispatched": email_dispatched,
     }
 
@@ -701,10 +734,8 @@ def handle_apply(args: argparse.Namespace) -> int:
     print(f"  1. Open Portal:  {fetched.url or 'Open the employer application portal'}")
     print(f"  2. Upload CV:    Attach '{cv_pdf_name}'")
     print(f"  3. Upload Letter:Attach '{letter_pdf_name}'")
-    print(
-        f"  4. Key Pitch:    Emphasize 99.9% uptime SLA, 65% deploy acceleration, "
-        f"KCNA + Cisco CyberOps Associate, and {', '.join(eval_res.matched_skills[:5]) or 'AWS/Azure/Kubernetes'}."
-    )
+    matched_skills = ", ".join(eval_res.matched_skills[:5]) or "No profile-listed skills matched"
+    print(f"  4. Key Profile Facts: Highlight only profile-listed skills relevant to the position: {matched_skills}.")
     if args.email:
         mode_str = "LIVE SMTP" if args.live else "DRY-RUN"
         print(f"  5. Email Status: Dispatched ({mode_str}) to {active_settings.recipient_email}: {email_dispatched}")
@@ -727,7 +758,7 @@ def handle_digest(args: argparse.Namespace) -> int:
             date_str=args.date,
             output_dir=args.output_dir,
             force=args.force,
-            per_opportunity=getattr(args, "per_opportunity", False),
+            per_opportunity_email=getattr(args, "per_opportunity", False),
         )
         print(json.dumps(res, indent=2))
         return 0
@@ -745,7 +776,7 @@ def handle_audit(args: argparse.Namespace) -> int:
         return 1
 
     try:
-        profile = load_profile(allow_fallback=True)
+        profile = load_profile()
         out_dir = Path(args.output_dir) if args.output_dir else None
         report = run_workflow_audit(profile=profile, output_dir=out_dir)
         if args.json:
@@ -756,6 +787,29 @@ def handle_audit(args: argparse.Namespace) -> int:
     except Exception as e:
         sys.stderr.write(f"Workflow audit failed: {e}\n")
         return 1
+
+
+def handle_feedback(args: argparse.Namespace) -> int:
+    """Records explicit candidate feedback without changing profile data."""
+    active_settings = get_settings()
+    state_file = (
+        Path(args.state_file)
+        if args.state_file
+        else active_settings.output_dir / "state" / "role_feedback.json"
+    )
+    try:
+        data = record_role_feedback(state_file, args.role, args.outcome)
+    except (OSError, ValueError) as exc:
+        sys.stderr.write(f"Error recording candidate feedback: {exc}\n")
+        return 1
+
+    print(json.dumps({
+        "role": args.role,
+        "outcome": args.outcome,
+        "recorded_counts": data["roles"][args.role],
+        "state_file": str(state_file.resolve()),
+    }, indent=2))
+    return 0
 
 
 def handle_stepcon(args: argparse.Namespace) -> int:
@@ -772,7 +826,7 @@ def handle_stepcon(args: argparse.Namespace) -> int:
         return 1
 
     try:
-        profile = load_profile(allow_fallback=True)
+        profile = load_profile()
         stepcon = profile.stepcon_solutions
     except Exception as e:
         sys.stderr.write(f"Error loading Stepcon profile: {e}\n")
@@ -872,7 +926,7 @@ def evaluate_from_stdin(text: str) -> int:
         return 1
 
     try:
-        profile = load_profile(allow_fallback=True)
+        profile = load_profile()
         res = evaluate_job(profile, str(text).strip())
         print(f"Evaluated Match Score: {res.overall_score:.1f}% | {res.rationale}")
         return 0
@@ -939,12 +993,13 @@ def handle_correct(args: argparse.Namespace) -> int:
             print(f"  [{doc['type']}] Source: {doc['source']} -> PDF: {doc['pdf']} ({doc['pages']} pages)")
 
         if getattr(args, "profile", False):
-            for p_path in (Path("data/profile-data.json"), Path("profile-data.json")):
-                if p_path.is_file():
-                    p_txt = p_path.read_text(encoding="utf-8")
-                    if find_str in p_txt:
-                        p_path.write_text(p_txt.replace(find_str, replace_str), encoding="utf-8")
-                        print(f"  [Single Source of Truth Updated]: {p_path.name}")
+            p_path = find_profile_data_path()
+            if p_path is None:
+                raise FileNotFoundError("Candidate profile was not found; no source-of-truth data was changed.")
+            p_txt = p_path.read_text(encoding="utf-8")
+            if find_str in p_txt:
+                p_path.write_text(p_txt.replace(find_str, replace_str), encoding="utf-8")
+                print(f"  [Single Source of Truth Updated]: {p_path.name}")
 
         print("=" * 76 + "\n")
         return 0
@@ -996,6 +1051,8 @@ def run_cli(args: Optional[List[str]] = None) -> int:
         return handle_digest(parsed_args)
     elif subcmd == "audit":
         return handle_audit(parsed_args)
+    elif subcmd == "feedback":
+        return handle_feedback(parsed_args)
     elif subcmd == "stepcon":
         return handle_stepcon(parsed_args)
     elif subcmd in ("rebuild", "render"):

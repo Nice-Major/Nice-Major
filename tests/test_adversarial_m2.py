@@ -279,31 +279,26 @@ class TestExtremeDomainCases:
         assert "Do Not Apply" in res.rationale
         assert res.matched_skills == []
 
-    def test_empirical_finding_polysemic_word_vulnerability(self, candidate_profile):
+    def test_polysemic_technical_words_do_not_inflate_unrelated_job_titles(self, candidate_profile):
         """
-        EMPIRICAL VULNERABILITY REPORT:
-        Demonstrates that common English words in CANONICAL_TECH_MAP ('support', 'container', 'windows', 'bash')
-        inflate non-technical jobs into high-scoring IT matches:
-        - Commercial Window Cleaner Specialist -> 85.0% ('Strong Apply')
-        - Garbage Truck Driver (plastic containers) -> 74.5% ('Apply')
-        - Party Planning Lead (company bash) -> 85.0% ('Strong Apply')
-        - Astronaut with life support systems -> 73.75% ('Apply')
+        Common technical words in unrelated job descriptions must not override title alignment.
         """
-        window_cleaner = "Commercial Window Cleaner Specialist: Washing glass exterior windows on commercial skyscrapers."
+        window_cleaner = (
+            "Commercial Window Cleaner Specialist: Washing glass exterior windows on commercial skyscrapers."
+        )
         res_win = scorer.evaluate_job(candidate_profile, window_cleaner)
-        assert res_win.overall_score >= 80.0
-        assert "Strong Apply" in res_win.rationale
-        assert "Windows" in res_win.matched_skills
+        assert res_win.overall_score == 0.0
+        assert res_win.breakdown["title"] == 0.0
 
         garbage_driver = "Garbage Truck Driver: Empty curbside plastic trash containers into garbage compactor."
         res_garbage = scorer.evaluate_job(candidate_profile, garbage_driver)
-        assert res_garbage.overall_score >= 70.0
-        assert "Container" in res_garbage.matched_skills
+        assert res_garbage.overall_score == 0.0
+        assert res_garbage.breakdown["title"] == 0.0
 
         party_planner = "Party Planning Lead: Organize festive catering and venue decorations for our corporate bash."
         res_party = scorer.evaluate_job(candidate_profile, party_planner)
-        assert res_party.overall_score >= 80.0
-        assert "Bash" in res_party.matched_skills
+        assert res_party.overall_score == 0.0
+        assert res_party.breakdown["title"] == 0.0
 
     def test_junior_with_30_years_experience_absurdity(self, candidate_profile):
         """Absurd requirement must not break scoring logic or cause negative/overflow scores."""

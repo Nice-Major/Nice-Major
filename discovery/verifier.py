@@ -19,6 +19,7 @@ import hashlib
 import html
 import re
 import socket
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional, Set, Tuple, Union
@@ -488,9 +489,9 @@ def verify_opportunities(
     if not opportunities or not isinstance(opportunities, (list, tuple)):
         return []
 
-    for opp in opportunities:
+    def verify_one(opp: Any) -> None:
         if opp is None:
-            continue
+            return
         url = getattr(opp, "url", opp.get("url") if isinstance(opp, dict) else "")
         res = verify_job_link(url=url, timeout=timeout, offline_mode=offline_mode)
 
@@ -502,5 +503,8 @@ def verify_opportunities(
             opp["is_active"] = res.is_active
             opp["verified_active"] = res.is_active
             opp["verification_reason"] = res.reason
+
+    with ThreadPoolExecutor(max_workers=min(16, len(opportunities))) as executor:
+        list(executor.map(verify_one, opportunities))
 
     return opportunities

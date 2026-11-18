@@ -67,7 +67,7 @@ def generate_proposal(
 
     # 2. Normalize Lead Candidate Profile
     if candidate is None:
-        cand_profile = load_profile(allow_fallback=True)
+        cand_profile = load_profile()
     elif isinstance(candidate, dict):
         from ingestion.parser import load_profile_from_dict
         cand_profile = load_profile_from_dict(candidate)

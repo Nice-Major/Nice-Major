@@ -1,0 +1,113 @@
+{
+  "schemaVersion": 1,
+  "lastReviewed": "2026-11-17",
+  "sources": {
+    "greenhouse": [
+      {
+        "board": "gitlab",
+        "company": "GitLab",
+        "careersUrl": "https://boards.greenhouse.io/gitlab",
+        "fit": "Cloud platform, infrastructure, DevOps, and support roles"
+      },
+      {
+        "board": "grafanalabs",
+        "company": "Grafana Labs",
+        "careersUrl": "https://boards.greenhouse.io/grafanalabs",
+        "fit": "Cloud observability, platform, and infrastructure roles"
+      },
+      {
+        "board": "elastic",
+        "company": "Elastic",
+        "careersUrl": "https://boards.greenhouse.io/elastic",
+        "fit": "Cloud, platform, infrastructure, and technical support roles"
+      },
+      {
+        "board": "canonical",
+        "company": "Canonical",
+        "careersUrl": "https://boards.greenhouse.io/canonical",
+        "fit": "Linux, cloud infrastructure, systems, and support roles"
+      },
+      {
+        "board": "mongodb",
+        "company": "MongoDB",
+        "careersUrl": "https://boards.greenhouse.io/mongodb",
+        "fit": "Cloud operations, infrastructure, platform, and support roles"
+      },
+      {
+        "board": "fastly",
+        "company": "Fastly",
+        "careersUrl": "https://boards.greenhouse.io/fastly",
+        "fit": "Cloud infrastructure, platform, and technical support roles"
+      },
+      {
+        "board": "newrelic",
+        "company": "New Relic",
+        "careersUrl": "https://boards.greenhouse.io/newrelic",
+        "fit": "Cloud infrastructure, systems, and observability roles"
+      },
+      {
+        "board": "cockroachlabs",
+        "company": "Cockroach Labs",
+        "careersUrl": "https://boards.greenhouse.io/cockroachlabs",
+        "fit": "Cloud platform, infrastructure, and database operations roles"
+      },
+      {
+        "board": "launchdarkly",
+        "company": "LaunchDarkly",
+        "careersUrl": "https://boards.greenhouse.io/launchdarkly",
+        "fit": "Cloud engineering, infrastructure, and security roles"
+      }
+    ],
+    "ashby": [
+      {
+        "board": "sentry",
+        "company": "Sentry",
+        "careersUrl": "https://jobs.ashbyhq.com/sentry",
+        "fit": "Platform, cloud, infrastructure, and technical support roles"
+      },
+      {
+        "board": "supabase",
+        "company": "Supabase",
+        "careersUrl": "https://jobs.ashbyhq.com/supabase",
+        "fit": "Cloud platform, infrastructure, and support roles"
+      },
+      {
+        "board": "temporal",
+        "company": "Temporal",
+        "careersUrl": "https://jobs.ashbyhq.com/temporal",
+        "fit": "Cloud infrastructure, platform, and reliability roles"
+      },
+      {
+        "board": "posthog",
+        "company": "PostHog",
+        "careersUrl": "https://jobs.ashbyhq.com/posthog",
+        "fit": "Site reliability and technical support roles"
+      },
+      {
+        "board": "airbyte",
+        "company": "Airbyte",
+        "careersUrl": "https://jobs.ashbyhq.com/airbyte",
+        "fit": "Platform, infrastructure, and cloud roles"
+      },
+      {
+        "board": "modal",
+        "company": "Modal",
+        "careersUrl": "https://jobs.ashbyhq.com/modal",
+        "fit": "Cloud systems, platform, and infrastructure roles"
+      },
+      {
+        "board": "replit",
+        "company": "Replit",
+        "careersUrl": "https://jobs.ashbyhq.com/replit",
+        "fit": "Cloud platform, infrastructure, and security roles"
+      },
+      {
+        "board": "linear",
+        "company": "Linear",
+        "careersUrl": "https://jobs.ashbyhq.com/linear",
+        "fit": "Technical support opportunities, including APAC postings"
+      }
+    ],
+    "lever": []
+  }
+}

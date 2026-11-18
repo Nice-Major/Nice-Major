@@ -16,6 +16,7 @@ Coordinates the complete 5-stage automated career pipeline:
 from __future__ import annotations
 
 import argparse
+from collections import Counter
 import datetime
 import json
 import logging
@@ -39,12 +40,54 @@ from dispatch.mailer import send_email, check_attachment_size_limit
 from engine.scorer import evaluate_job
 from ingestion.models import CandidateProfile, StepconProfile
 from ingestion.parser import load_profile
-from ingestion.text_utils import safe_filename
+from ingestion.text_utils import application_filename
 from scheduler.workflow_optimizer import generate_daily_workflow_review
-from tailoring.cv_tailor import generate_cv, generate_cv_pdf, get_cv_filename
-from tailoring.letter_tailor import generate_cover_letter, generate_cover_letter_pdf, get_letter_filename
+from scheduler.opportunity_history import (
+    filter_new_opportunities,
+    record_dispatched_opportunities,
+)
+from scheduler.workflow_feedback import load_role_feedback, role_preference_adjustments
+from tailoring.cv_tailor import generate_cv, generate_cv_pdf
+from tailoring.letter_tailor import generate_cover_letter, generate_cover_letter_pdf
+from tailoring.pdf_renderer import render_markdown_to_docx_bytes
 
 logger = logging.getLogger("daily_dispatch")
+DISCOVERY_LIMIT = 500
+MAX_EMAIL_OPPORTUNITIES = 20
+
+
+def _source_counts(opportunities: List[Any]) -> Dict[str, int]:
+    return dict(Counter(
+        str(getattr(opp, "source", "") or (opp.get("source", "") if isinstance(opp, dict) else "unknown"))
+        for opp in opportunities
+    ))
+
+
+def _select_employer_diverse_items(
+    scored_items: List[Tuple[Any, Any]],
+    limit: int,
+) -> List[Tuple[Any, Any]]:
+    """Keep the highest-scoring posting per employer to prevent attachment-name collisions."""
+    if limit <= 0:
+        return []
+    selected: List[Tuple[Any, Any]] = []
+    seen_companies = set()
+    for item in scored_items:
+        opportunity = item[0]
+        company = (
+            opportunity.get("company", "")
+            if isinstance(opportunity, dict)
+            else getattr(opportunity, "company", "")
+        )
+        normalized_company = re.sub(r"\s+", " ", str(company or "")).strip().casefold()
+        normalized_company = normalized_company or "hiring organization"
+        if normalized_company in seen_companies:
+            continue
+        seen_companies.add(normalized_company)
+        selected.append(item)
+        if len(selected) >= limit:
+            break
+    return selected
 
 
 # ============================================================================
@@ -231,38 +274,64 @@ def execute_candidate_career_workflow(
     logger.info(f"Starting candidate career workflow for date {date_str} (dry_run={dry_run})...")
 
     # Step 1: Discover opportunities
-    raw_opps = fetch_opportunities(dry_run=dry_run)
+    base_out = Path(output_dir or settings.output_dir)
+    state_dir = base_out / "state"
+    history_path = state_dir / "opportunity_history.json"
+    feedback_path = state_dir / "role_feedback.json"
+    raw_opps = fetch_opportunities(
+        dry_run=dry_run,
+        offline_mode=dry_run,
+        limit=DISCOVERY_LIMIT,
+    )
+    fetched_source_counts = _source_counts(raw_opps)
+    logger.info("Discovery fetched %d postings by source: %s", len(raw_opps), fetched_source_counts)
 
     # Step 2: Filter for Nigeria remote / relocation eligibility
     eligible_opps = filter_opportunities(raw_opps, candidate=profile)
+    eligible_source_counts = _source_counts(eligible_opps)
 
-    # Step 3: Verify active link and freshness
-    verified_opps = verify_opportunities(eligible_opps, offline_mode=dry_run)
+    # 3. Suppress postings that have already been delivered on an earlier run.
+    new_opps, previously_dispatched_count = filter_new_opportunities(eligible_opps, history_path)
 
-    # Step 4: Score all verified opportunities
+    # Step 4: Verify active link and freshness
+    verified_opps = verify_opportunities(new_opps, offline_mode=dry_run)
+    verified_source_counts = _source_counts(verified_opps)
+
+    # Step 5: Score all verified opportunities
     scored_items: List[Tuple[Any, Any]] = []
     for opp in verified_opps:
         desc = getattr(opp, "description", "") or (opp.get("description", "") if isinstance(opp, dict) else "")
         title = getattr(opp, "title", "") or (opp.get("title", "") if isinstance(opp, dict) else "")
         loc = getattr(opp, "location", "") or (opp.get("location", "") if isinstance(opp, dict) else "")
+
         text = f"{title} | {loc}\n\n{desc}" if desc else title
 
         res = evaluate_job(profile, text)
-        scored_items.append((opp, res))
+        if res.overall_score > 0:
+            scored_items.append((opp, res))
 
-    scored_items.sort(key=lambda x: x[1].overall_score, reverse=True)
+    role_feedback = load_role_feedback(feedback_path)
+    preference_adjustments = role_preference_adjustments(role_feedback)
+    scored_items.sort(
+        key=lambda x: (
+            x[1].overall_score + preference_adjustments.get(x[1].target_role, 0.0),
+            x[1].overall_score,
+        ),
+        reverse=True,
+    )
+    scored_source_counts = _source_counts([item[0] for item in scored_items])
+    email_scored_items = _select_employer_diverse_items(scored_items, MAX_EMAIL_OPPORTUNITIES)
 
-    # Step 5: Tailor opportunity-specific PDF application packages for top opportunities
+    # Step 6: Tailor opportunity-specific PDF application packages for top opportunities
     attachments: List[Tuple[str, bytes]] = []
     tailored_packages_meta: List[Dict[str, Any]] = []
     per_opp_dispatches: List[str] = []
     tailored_count = 0
 
-    base_out = output_dir or settings.output_dir
-    pkg_dir = Path(base_out) / "packages" / date_str
+    pkg_dir = base_out / "packages" / date_str
     pkg_dir.mkdir(parents=True, exist_ok=True)
 
-    for opp, score_res in scored_items:
+    for opp, score_res in email_scored_items:
         if score_res.overall_score >= min_tailor_score and tailored_count < 5:
             desc = getattr(opp, "description", "") or (opp.get("description", "") if isinstance(opp, dict) else "")
             title = getattr(opp, "title", "Position") or (opp.get("title", "Position") if isinstance(opp, dict) else "Position")
@@ -279,11 +348,25 @@ def execute_candidate_career_workflow(
                 output_format="md",
             )
 
-            cv_filename = get_cv_filename(profile, target_role, "pdf", company_name=company)
-            letter_filename = get_letter_filename(profile, target_role, "pdf", company_name=company)
+            cv_filename = application_filename(profile, company, "CV")
+            letter_filename = application_filename(profile, company, "Cover Letter")
+            cv_docx_filename = application_filename(profile, company, "CV", "docx")
+            letter_docx_filename = application_filename(profile, company, "Cover Letter", "docx")
 
             cv_pdf_path = pkg_dir / cv_filename
             letter_pdf_path = pkg_dir / letter_filename
+            cv_md_filename = application_filename(profile, company, "CV", "md")
+            letter_md_filename = application_filename(profile, company, "Cover Letter", "md")
+            cv_md_path = pkg_dir / cv_md_filename
+            letter_md_path = pkg_dir / letter_md_filename
+            cv_docx_path = pkg_dir / cv_docx_filename
+            letter_docx_path = pkg_dir / letter_docx_filename
+            cv_md_path.write_text(cv_md_text, encoding="utf-8")
+            letter_md_path.write_text(letter_md_text, encoding="utf-8")
+            cv_docx_bytes = render_markdown_to_docx_bytes(cv_md_text)
+            letter_docx_bytes = render_markdown_to_docx_bytes(letter_md_text)
+            cv_docx_path.write_bytes(cv_docx_bytes)
+            letter_docx_path.write_bytes(letter_docx_bytes)
 
             cv_bytes = generate_cv_pdf(
                 profile,
@@ -320,7 +403,12 @@ def execute_candidate_career_workflow(
                 except Exception:
                     pass
 
-            candidate_pkg = [(cv_filename, cv_bytes), (letter_filename, letter_bytes)]
+            candidate_pkg = [
+                (cv_filename, cv_bytes),
+                (letter_filename, letter_bytes),
+                (cv_docx_filename, cv_docx_bytes),
+                (letter_docx_filename, letter_docx_bytes),
+            ]
             if not check_attachment_size_limit(attachments + candidate_pkg, max_mb=10.0):
                 logger.warning("Attachment limit (10MB) reached; skipping further package tailoring.")
                 break
@@ -334,8 +422,16 @@ def execute_candidate_career_workflow(
                 "score": score_res.overall_score,
                 "cv_filename": cv_filename,
                 "letter_filename": letter_filename,
+                "cv_docx_filename": cv_docx_filename,
+                "letter_docx_filename": letter_docx_filename,
+                "cv_md_filename": cv_md_filename,
+                "letter_md_filename": letter_md_filename,
                 "cv_path": str(cv_pdf_path.resolve()),
                 "letter_path": str(letter_pdf_path.resolve()),
+                "cv_md_path": str(cv_md_path.resolve()),
+                "letter_md_path": str(letter_md_path.resolve()),
+                "cv_docx_path": str(cv_docx_path.resolve()),
+                "letter_docx_path": str(letter_docx_path.resolve()),
             })
 
             # Optional Per-Opportunity Dedicated Email Mode
@@ -358,8 +454,9 @@ def execute_candidate_career_workflow(
         while attachments and not check_attachment_size_limit(attachments, max_mb=10.0):
             attachments.pop()
 
-    # Step 6: Build multipart digest email
-    sorted_opp_list = [item[0] for item in scored_items]
+    # Step 7: Build multipart digest email
+    sorted_opp_list = [item[0] for item in email_scored_items]
+    emailed_source_counts = _source_counts(sorted_opp_list)
     msg = build_digest_email(
         opportunities=sorted_opp_list,
         candidate=profile,
@@ -367,16 +464,21 @@ def execute_candidate_career_workflow(
         attachments=attachments,
     )
 
-    # Step 7: Send or export email
+    # Step 8: Send or export email
     out_target_dir = output_dir or (settings.output_dir / "digests")
     dispatch_result = send_email(msg, dry_run=dry_run, output_dir=out_target_dir)
 
-    # Step 8: Generate Daily Workflow Self-Audit & Optimization Report
+    if not dry_run:
+        record_dispatched_opportunities(sorted_opp_list, history_path, dispatched_date=date_str)
+
+    # Step 9: Generate Daily Workflow Self-Audit & Optimization Report
     workflow_review = generate_daily_workflow_review(
         scored_items=scored_items,
         tailored_packages=tailored_packages_meta,
         date_str=date_str,
-        output_dir=Path(base_out),
+        output_dir=base_out,
+        role_feedback=role_feedback,
+        role_preference_adjustments=preference_adjustments,
     )
 
     logger.info(f"Candidate career workflow complete. Dispatched {len(sorted_opp_list)} opportunities to {dispatch_result}.")
@@ -386,6 +488,15 @@ def execute_candidate_career_workflow(
         "workflow": "candidate_career_workflow",
         "date": date_str,
         "opportunities_count": len(sorted_opp_list),
+        "previously_dispatched_count": previously_dispatched_count,
+        "discovery_counts_by_source": fetched_source_counts,
+        "eligible_counts_by_source": eligible_source_counts,
+        "verified_counts_by_source": verified_source_counts,
+        "scored_counts_by_source": scored_source_counts,
+        "emailed_counts_by_source": emailed_source_counts,
+        "eligible_count": len(eligible_opps),
+        "verified_count": len(verified_opps),
+        "scored_count": len(scored_items),
         "tailored_packages_count": tailored_count,
         "tailored_packages": tailored_packages_meta,
         "per_opportunity_dispatches": per_opp_dispatches,
@@ -462,7 +573,7 @@ def execute_combined_daily_run(
         return order
 
     active_date = date_str or datetime.date.today().isoformat()
-    profile = load_profile(allow_fallback=True)
+    profile = load_profile()
 
     # 1. Primary: Candidate Career Workflow
     career_res = execute_candidate_career_workflow(
@@ -509,7 +620,7 @@ def run_daily_job(
     active_date = date_str or datetime.date.today().isoformat()
 
     out_path = Path(output_dir) if output_dir else active_settings.output_dir
-    log_file = out_path / "dispatch_log.json"
+    log_file = out_path / "state" / "dispatch_log.json"
 
     # Idempotency Check
     if not force and not check_daily_idempotency(active_date, log_file):
@@ -529,14 +640,15 @@ def run_daily_job(
     )
 
     # Record Dispatch
-    record_dispatch(
-        active_date,
-        log_file,
-        metadata={
-            "dry_run": is_dry_run,
-            "opportunities_count": result.get("candidate_career", {}).get("opportunities_count", 0),
-        },
-    )
+    if not is_dry_run:
+        record_dispatch(
+            active_date,
+            log_file,
+            metadata={
+                "dry_run": False,
+                "opportunities_count": result.get("candidate_career", {}).get("opportunities_count", 0),
+            },
+        )
 
     return result
 

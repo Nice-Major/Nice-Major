@@ -405,10 +405,15 @@ class TestProfileModels:
             name="Kubernetes and Cloud Native Associate (KCNA)",
             issuer="The Linux Foundation / CNCF",
             status="Active",
+            issueDate="September 2025",
+            expirationDate="September 2027",
             tags=["all", "devops"],
         )
         assert cert.status == "Active"
         assert cert.is_active is True
+        assert cert.issue_date == "September 2025"
+        assert cert.expiration_date == "September 2027"
+        assert Certification.from_dict(cert.to_dict()).expiration_date == "September 2027"
         assert cert.credly_tracker_link_policy == "no_external_tracker_links"
 
     def test_role_categories_lenses(self, minimal_candidate_dict):

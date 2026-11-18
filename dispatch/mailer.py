@@ -219,7 +219,7 @@ def send_email(
         raise ValueError("Live email transmission failed: SMTP_PASSWORD is not configured.")
 
     # Execute SMTP delivery
-    server = smtplib.SMTP(host=str(host).strip(), port=int(port), timeout=15)
+    server = smtplib.SMTP(host=str(host).strip(), port=int(port), timeout=120)
     try:
         if use_tls:
             server.starttls()

@@ -54,6 +54,8 @@ class Certification:
     tags: List[str] = field(default_factory=list)
     credential_id: str = ""
     verification_url: str = ""
+    issue_date: str = ""
+    expiration_date: str = ""
 
     def __init__(
         self,
@@ -85,6 +87,8 @@ class Certification:
         self.tags = list(kwargs.get("tags", tags or []))
         self.credential_id = str(kwargs.get("credentialId", kwargs.get("credential_id", credential_id)))
         self.verification_url = str(kwargs.get("verificationUrl", kwargs.get("verification_url", verification_url)))
+        self.issue_date = str(kwargs.get("issueDate", kwargs.get("issue_date", "")))
+        self.expiration_date = str(kwargs.get("expirationDate", kwargs.get("expiration_date", "")))
 
     @property
     def is_active(self) -> bool:
@@ -113,6 +117,8 @@ class Certification:
             "tags": self.tags,
             "credentialId": self.credential_id,
             "verificationUrl": self.verification_url,
+            "issueDate": self.issue_date,
+            "expirationDate": self.expiration_date,
         }
 
     @classmethod
@@ -139,18 +145,7 @@ class KpiMetric:
     ):
         self.value = str(kwargs.get("value", value))
         self.metric = str(kwargs.get("metric", kwargs.get("label", label or metric)))
-        ctx = str(kwargs.get("context", context))
-        # Supply sensible default context for canonical metrics if missing
-        if not ctx:
-            if "99.9%" in self.value:
-                ctx = "Sustained enterprise uptime across AWS and Azure estates"
-            elif "99%" in self.value:
-                ctx = "First-day L3 issue resolution rate for Azure App Service"
-            elif "60%" in self.value:
-                ctx = "AI prediction engine accuracy on AKS pods/nodes"
-            elif "15" in self.value:
-                ctx = "Terraform and ARM/Bicep IaC provisioning reduced from hours"
-        self.context = ctx
+        self.context = str(kwargs.get("context", context))
 
     @property
     def label(self) -> str:

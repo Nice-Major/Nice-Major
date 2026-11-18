@@ -1,20 +1,9 @@
 """
-STAR Methodology Cover Letter Tailoring Engine.
-Module: tailoring.letter_tailor
-Feature: F06 (Cover Letter Tailoring Engine)
+Profile-grounded cover letter generation.
 
-Generates tailored, high-impact cover letters structured around the STAR
-(Situation, Task, Action, Result) methodology. Conforms strictly to global
-technical recruitment standards:
-- Dynamic alignment with target role, hiring company, and job description keywords.
-- Grounded strictly in candidate John Victor Aniekwe's verified empirical metrics
-  (99.9% uptime SLA, 99% first-day L3 RCA resolution, >60% AI prediction accuracy, <15m IaC).
-- Multi-format output: Markdown (.md), clean print-ready semantic HTML (.html),
-  and ATS-friendly plain text (.txt).
-- Multi-tone adaptation: professional (default), technical, executive, results-oriented.
-- Zero buzzwords/fluff (prohibits "rockstar", "ninja", "guru", "wizard").
-- Zero external tracker / Credly links.
-- Typographic safety via sanitize_ligatures and clean_ats_text.
+Creates tailored Markdown, HTML, and plain-text letters from candidate-profile
+facts and the target job description without injecting fallback credentials,
+achievements, metrics, or contact details.
 """
 
 from __future__ import annotations
@@ -97,39 +86,6 @@ ROLE_LENS_MAP: Dict[str, str] = {
     "l3 cloud escalation engineer": "support",
 }
 
-# Verified Empirical Metrics
-VERIFIED_METRICS = {
-    "uptime": "99.9% infrastructure uptime SLA",
-    "rca": "99% first-day L3 issue resolution rate",
-    "ai_accuracy": ">60% AI prediction accuracy",
-    "iac_speed": "<15-minute automated provisioning time",
-}
-
-# Common high-value technical keywords by lens
-LENS_TECH_KEYWORDS: Dict[str, List[str]] = {
-    "devops": [
-        "Kubernetes (KCNA)", "Terraform", "Docker", "CI/CD Pipelines",
-        "GitHub Actions", "Azure DevOps", "AWS", "Microsoft Azure",
-        "Helm", "ArgoCD", "DevSecOps", "Prometheus", "Grafana"
-    ],
-    "architect": [
-        "Cloud Solutions Architecture", "AWS", "Microsoft Azure", "Terraform",
-        "Well-Architected Framework", "Kubernetes (AKS/EKS)", "Microservices",
-        "Private Endpoints", "FinOps", "Disaster Recovery", "Zero-Trust Security"
-    ],
-    "infra": [
-        "Linux (Ubuntu/RHEL)", "Windows Server", "Hybrid Cloud Networking",
-        "Terraform", "AWS EC2/VPC", "Azure VMs/VNets", "Bash & PowerShell",
-        "Patch Management", "System Hardening", "Virtualization"
-    ],
-    "support": [
-        "Microsoft Azure App Service", "L3 Production Escalation", "Root-Cause Analysis (RCA)",
-        "Azure Monitor & App Insights", "AWS CloudWatch", "Distributed Tracing",
-        "Microsoft Copilot in DfM", "Troubleshooting Guides (TsG)", "SLA & CSAT Delivery"
-    ],
-}
-
-
 # ============================================================================
 # 2. Candidate Ingestion & Extraction Helpers
 # ============================================================================
@@ -167,16 +123,12 @@ def _resolve_target_role(target_role: str, job_text: str = "") -> str:
 
 def _extract_matched_technologies(candidate: CandidateProfile, job_text: str, target_role: str) -> List[str]:
     """
-    Identifies candidate technical skills matching the target job description.
-    Falls back to canonical lens skills if job_text is minimal or empty.
+    Identifies only candidate-profile skills that match the target job description.
     """
-    role_key = ROLE_LENS_MAP.get(target_role.lower().strip(), "devops")
     all_candidate_skills = candidate.get_skills_flat()
-    if not all_candidate_skills:
-        all_candidate_skills = LENS_TECH_KEYWORDS.get(role_key, LENS_TECH_KEYWORDS["devops"])
 
     if not job_text or not job_text.strip():
-        return LENS_TECH_KEYWORDS.get(role_key, LENS_TECH_KEYWORDS["devops"])[:6]
+        return all_candidate_skills[:6]
 
     clean_words = set(extract_clean_words(job_text))
     matched: List[str] = []
@@ -187,14 +139,6 @@ def _extract_matched_technologies(candidate: CandidateProfile, job_text: str, ta
             matched.append(skill)
         elif any(part in clean_words for part in re.split(r"[\s/,-]+", skill_lower) if len(part) >= 3):
             matched.append(skill)
-
-    # Augment with role-lens competencies if few matches
-    if len(matched) < 4:
-        for fallback_skill in LENS_TECH_KEYWORDS.get(role_key, []):
-            if fallback_skill not in matched:
-                matched.append(fallback_skill)
-            if len(matched) >= 6:
-                break
 
     return matched[:8]
 
@@ -217,46 +161,20 @@ def _build_opening_paragraph(
     company_name: str,
     tone: str,
 ) -> str:
-    """Constructs the opening hook establishing candidacy, credentials, and authority."""
+    """Builds an opening using only details present in the candidate profile."""
     company_phrase = f" at {company_name.strip()}" if company_name and company_name.strip() else ""
-    degree_info = "Bachelor of Science (B.Sc.) in Computer Science from the University of Nigeria"
-    if candidate.candidate and candidate.candidate.education and candidate.candidate.education.degree:
-        edu = candidate.candidate.education
-        degree_info = f"{edu.degree} from {edu.institution or 'the University of Nigeria'}"
-
-    if tone == "technical":
-        return (
-            f"I am writing to express my strong interest in the {target_role} position{company_phrase}. "
-            f"With over 5 years of production engineering experience architecting, automating, and securing "
-            f"mission-critical cloud infrastructure across AWS and Microsoft Azure—backed by a {degree_info} "
-            f"and active Kubernetes (KCNA) and AWS certifications—I specialize in building fault-tolerant systems "
-            f"that guarantee high availability and operational excellence."
-        )
-    elif tone == "executive":
-        return (
-            f"I am pleased to present my application for the {target_role} role{company_phrase}. "
-            f"Bringing 5+ years of demonstrable success in cloud infrastructure leadership, enterprise SLA governance, "
-            f"and high-impact platform engineering, I have consistently aligned technical operations with strategic "
-            f"business objectives. Holding a {degree_info} alongside formal certifications in AWS and Kubernetes (KCNA), "
-            f"I deliver scalable platforms that balance rigorous reliability, security, and capital efficiency."
-        )
-    elif tone in ("results_oriented", "results-oriented"):
-        return (
-            f"I am writing to apply for the {target_role} position{company_phrase}. "
-            f"Throughout 5+ years of enterprise cloud engineering, my track record is defined by quantifiable operational "
-            f"outcomes: sustaining a 99.9% infrastructure uptime SLA across hybrid estates, attaining a 99% first-day "
-            f"L3 incident resolution rate, and slashing environment provisioning times from hours to <15 minutes. "
-            f"Supported by a {degree_info} and AWS and KCNA certifications, I offer immediate engineering rigor."
-        )
-    else:  # professional (default)
-        return (
-            f"I am writing to formally submit my application for the {target_role} position{company_phrase}. "
-            f"As a Senior Cloud and Platform Engineer with 5+ years of verified production experience across Amazon "
-            f"Web Services (AWS) and Microsoft Azure, I have dedicated my career to designing high-availability systems, "
-            f"automating declarative pipelines, and resolving complex infrastructure escalations. I hold a {degree_info}, "
-            f"as well as industry credentials including Kubernetes and Cloud Native Associate (KCNA) and AWS Certified "
-            f"Solutions Architect."
-        )
+    opening = f"I am applying for the {target_role} position{company_phrase}."
+    summary = candidate.get_role_lens(target_role).summary.strip()
+    if summary:
+        opening += f" My profile summarizes my background as follows: {summary}"
+    education = candidate.education or candidate.candidate.education
+    if education:
+        education_details = " — ".join(value for value in (education.degree, education.institution) if value)
+        if education.period:
+            education_details = f"{education_details} ({education.period})" if education_details else education.period
+        if education_details:
+            opening += f" My profile lists {education_details}."
+    return opening
 
 
 def _build_star_body_paragraphs(
@@ -266,101 +184,48 @@ def _build_star_body_paragraphs(
     matched_skills: List[str],
     tone: str,
 ) -> List[str]:
-    """Constructs the 3 STAR-methodology core body paragraphs."""
-    company_ref = company_name.strip() if company_name and company_name.strip() else "your organization"
-    tech_str = ", ".join(matched_skills[:5]) if matched_skills else "Kubernetes, Terraform, AWS, Azure, and CI/CD"
+    """Summarizes only profile-listed experience, metrics, and matching skills."""
+    paragraphs: List[str] = []
+    experience_bullets = []
+    for experience in candidate.experience:
+        for bullet in experience.to_dict().get("bullets", []):
+            text = bullet if isinstance(bullet, str) else bullet.get("text", "")
+            if text and text not in experience_bullets:
+                experience_bullets.append(text)
+            if len(experience_bullets) == 2:
+                break
+        if len(experience_bullets) == 2:
+            break
+    if experience_bullets:
+        paragraphs.append("Relevant profile experience includes: " + " ".join(experience_bullets))
 
-    # Paragraph 1: STAR Situation & Task (Cloud Scale & Reliability)
-    if tone == "technical":
-        p1 = (
-            f"In my production engineering roles, I have spearheaded the design and lifecycle management of "
-            f"distributed multi-cloud estates spanning AWS and Microsoft Azure. Tasked with ensuring zero-downtime "
-            f"deployments and robust security perimeters, I engineered declarative Infrastructure as Code (IaC) "
-            f"modules utilizing Terraform and ARM/Bicep, containerized workloads deployed to Kubernetes (AKS/EKS), "
-            f"and established automated CI/CD pipelines through GitHub Actions. By implementing shift-left DevSecOps "
-            f"controls, private network endpoints, and comprehensive telemetry via Azure Monitor and AWS CloudWatch, "
-            f"I sustained an uncompromising 99.9% infrastructure uptime SLA while reducing multi-tier environment "
-            f"provisioning cycles from hours to under 15 minutes."
-        )
-    elif tone == "executive":
-        p1 = (
-            f"At the enterprise level, my focus centers on transforming infrastructure into a competitive advantage. "
-            f"Faced with rapidly scaling systems and the operational necessity for 24/7 reliability, I directed "
-            f"the modernization of multi-cloud architectures across AWS and Azure. Through standardizing declarative "
-            f"IaC workflows with Terraform, enforcing FinOps cost governance, and orchestrating containerized microservices "
-            f"on Kubernetes, I secured continuous 99.9% enterprise uptime SLAs. This automated governance accelerated product "
-            f"delivery timelines while eliminating configuration drift and significantly decreasing infrastructure spend."
-        )
-    else:  # professional & results_oriented
-        p1 = (
-            f"Throughout my production tenure at GVOC and enterprise engagements, I have maintained end-to-end "
-            f"ownership of mission-critical cloud and platform infrastructure. When tasked with supporting distributed "
-            f"enterprise workloads across AWS and Microsoft Azure, I engineered automated Infrastructure as Code using "
-            f"Terraform and ARM/Bicep, managed containerized microservices on Kubernetes (KCNA certified), and established "
-            f"hardened CI/CD release pipelines with GitHub Actions. Through proactive capacity planning and resilient "
-            f"network architecture, I consistently delivered a 99.9% infrastructure uptime SLA and compressed environment "
-            f"deployment times from hours to under 15 minutes."
-        )
+    metrics = []
+    for metric in candidate.kpi_metrics:
+        detail = " ".join(part.strip() for part in (metric.value, metric.metric, metric.context) if part.strip())
+        if detail:
+            metrics.append(detail)
+    if metrics:
+        paragraphs.append("The profile records these outcomes: " + "; ".join(metrics) + ".")
 
-    # Paragraph 2: STAR Action & Result (Incident Escalation, SRE & AI Workloads)
-    if tone == "technical":
-        p2 = (
-            f"Beyond core infrastructure provisioning, I bring proven L3 escalation expertise in distributed systems "
-            f"and AI platform engineering. Serving as L3 Escalation Lead for Microsoft Azure App Service, I executed "
-            f"deep-dive root-cause analysis (RCA) across complex microservices by dissecting distributed traces, "
-            f"memory dumps, and network metrics, utilizing Microsoft Copilot in DfM alongside custom troubleshooting guides. "
-            f"This rigorous diagnostic methodology resulted in a verified 99% first-day L3 issue resolution rate. "
-            f"Furthermore, at GVOC I architected and deployed containerized Azure OpenAI microservices on Kubernetes "
-            f"pods and nodes, achieving over 60% AI prediction accuracy under strict production performance constraints."
-        )
-    elif tone == "executive":
-        p2 = (
-            f"High-reliability operations demand both strategic vision and rapid incident resolution. As L3 Escalation "
-            f"Lead for Azure App Service environments, I instituted systematic root-cause mitigation protocols that "
-            f"achieved a 99% first-day resolution rate, safeguarding client SLA commitments and elevating customer satisfaction. "
-            f"In parallel, I spearheaded cutting-edge platform innovation by productionizing Azure OpenAI microservices "
-            f"on Kubernetes clusters, successfully powering AI prediction engines with >60% accuracy while maintaining "
-            f"strict cost boundaries and audit readiness."
-        )
-    else:  # professional & results_oriented
-        p2 = (
-            f"In addition to platform architecture, I possess extensive experience resolving complex production incidents "
-            f"and delivering next-generation AI workloads. As an L3 Cloud Escalation Lead for Microsoft Azure App Service, "
-            f"I conducted deep root-cause analysis using Application Insights, Azure Monitor, and CloudWatch telemetry, "
-            f"attaining a verified 99% first-day issue resolution rate. Moreover, I successfully architected and deployed "
-            f"Azure OpenAI workloads on Kubernetes infrastructure at GVOC, powering predictive AI platforms that achieved "
-            f"over 60% prediction accuracy while adhering to enterprise security baselines."
-        )
-
-    # Paragraph 3: Dynamic Alignment with Job & Company
-    p3 = (
-        f"The technical scope of the {target_role} role at {company_ref} aligns directly with my core competencies "
-        f"in {tech_str}. Operating synchronously within UTC+1 / CET business hours from Lagos, Nigeria, I collaborate "
-        f"seamlessly with international engineering teams across the UK, Europe, and North America. Whether integrated "
-        f"as an agile full-time engineering team member or engaged via frictionless Corp-to-Corp (C2C) contracting "
-        f"through Stepcon Solutions (CAC Registration: RC - 8284984), I am prepared to deliver immediate, measurable "
-        f"value to your cloud engineering initiatives."
-    )
-
-    return [p1, p2, p3]
+    if matched_skills:
+        paragraphs.append("Skills listed in my profile that match the role include " + ", ".join(matched_skills[:5]) + ".")
+    elif not paragraphs:
+        paragraphs.append("I would welcome the opportunity to discuss how the experience listed in my profile may fit this role.")
+    return paragraphs
 
 
 def _build_closing_paragraph(company_name: str, tone: str) -> str:
     """Constructs a confident, professional call to action and closing."""
     company_ref = f" {company_name.strip()}" if company_name and company_name.strip() else ""
-    return (
-        f"I welcome the opportunity to discuss how my technical expertise, certified engineering disciplines, "
-        f"and proven record of production uptime can contribute to the continued success of{company_ref}. "
-        f"Thank you for your time and consideration."
-    )
+    return f"I would welcome the opportunity to discuss my application{company_ref}. Thank you for your time and consideration."
 
 
 def _build_signoff(candidate: CandidateProfile) -> Tuple[str, str, str]:
     """Returns sign-off salutation, full name, and contact details."""
-    full_name = candidate.full_name or "John Victor Aniekwe"
-    phone_str = candidate.phone or "+2348130004114"
-    email_str = candidate.email or "aniekwevictor9@gmail.com"
-    portfolio_str = candidate.candidate.portfolio if (candidate.candidate and candidate.candidate.portfolio) else "https://nice-major.github.io/Nice-Major/"
+    full_name = candidate.full_name or "Candidate"
+    phone_str = candidate.phone
+    email_str = candidate.email
+    portfolio_str = candidate.candidate.portfolio if candidate.candidate else ""
 
     contact_parts = [p for p in [email_str, phone_str] if p and str(p).strip() and str(p).strip().lower() != "none"]
     contact_line = " | ".join(contact_parts)
@@ -668,29 +533,12 @@ def generate_cover_letter(
 
     # 4. Construct Header Block (guarding against literal "None")
     cand_info = profile.candidate or CandidateInfo()
-    full_name = profile.full_name or "John Victor Aniekwe"
-    if str(full_name).strip().lower() == "none":
-        full_name = "John Victor Aniekwe"
-
-    email = profile.email or "aniekwevictor9@gmail.com"
-    if str(email).strip().lower() == "none":
-        email = ""
-
-    phone = profile.phone or "+2348130004114"
-    if str(phone).strip().lower() == "none":
-        phone = ""
-
-    location = profile.location or "Lagos, Nigeria (UTC+1 / CET Synchronous)"
-    if str(location).strip().lower() == "none":
-        location = ""
-
-    portfolio = cand_info.portfolio if (cand_info and cand_info.portfolio) else "https://nice-major.github.io/Nice-Major/"
-    if str(portfolio).strip().lower() == "none":
-        portfolio = ""
-
-    linkedin = cand_info.linked_in if (cand_info and cand_info.linked_in) else "https://www.linkedin.com/in/victor-aniekwe"
-    if str(linkedin).strip().lower() == "none":
-        linkedin = ""
+    full_name = profile.full_name or "Candidate"
+    email = profile.email
+    phone = profile.phone
+    location = profile.location
+    portfolio = cand_info.portfolio if cand_info else ""
+    linkedin = cand_info.linked_in if cand_info else ""
 
     contact_parts = [p for p in [email, phone] if p and str(p).strip() and str(p).strip().lower() != "none"]
     contact_str = " | ".join(contact_parts)

@@ -127,7 +127,8 @@ ROLE_ENTRIES: List[RoleTaxonomyEntry] = [
         aliases=[
             "cloud infrastructure engineer", "infrastructure engineer", "cloud systems engineer",
             "cloud systems administrator", "hybrid cloud administrator", "cloud infra engineer",
-            "senior cloud infrastructure engineer"
+            "senior cloud infrastructure engineer", "infrastructure operations engineer",
+            "systems engineer", "network engineer", "network administrator"
         ],
     ),
     RoleTaxonomyEntry(
@@ -177,7 +178,8 @@ ROLE_ENTRIES: List[RoleTaxonomyEntry] = [
         aliases=[
             "devops engineer", "devsecops engineer", "dev(sec)ops engineer",
             "dev(sec)ops", "platform engineer", "site reliability engineer", "sre",
-            "senior devops engineer", "senior devsecops engineer", "senior devops & platform engineer"
+            "senior devops engineer", "senior devsecops engineer", "senior devops & platform engineer",
+            "platform operations engineer", "platform reliability engineer", "cloud security engineer"
         ],
     ),
     RoleTaxonomyEntry(
@@ -255,7 +257,8 @@ ROLE_ENTRIES: List[RoleTaxonomyEntry] = [
             "technical support engineer", "l3 technical support engineer",
             "cloud support engineer", "l3 cloud escalation engineer",
             "application support engineer", "support engineer",
-            "l3 technical cloud support engineer"
+            "l3 technical cloud support engineer", "service desk engineer", "service desk analyst",
+            "help desk engineer", "desktop support engineer", "it support engineer"
         ],
     ),
     RoleTaxonomyEntry(

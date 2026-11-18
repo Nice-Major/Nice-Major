@@ -126,7 +126,7 @@ class TestAtsFormattingAdversarial:
 
     @pytest.mark.parametrize("fmt", ["md", "html", "txt"])
     def test_all_canonical_headers_present_and_ordered(self, default_profile, fmt):
-        """Verify all 6 standard headers exist in exact linear sequence."""
+        """Verify applicable standard headers exist in exact linear sequence."""
         cv_out = cv_mod.generate_cv(
             candidate=default_profile,
             job_text="Kubernetes, Terraform, AWS, Azure",
@@ -134,8 +134,12 @@ class TestAtsFormattingAdversarial:
             output_format=fmt,
         )
 
+        expected_headers = [
+            header for header in self.CANONICAL_HEADERS
+            if header != "Key Projects" or default_profile.projects
+        ]
         positions = []
-        for header in self.CANONICAL_HEADERS:
+        for header in expected_headers:
             idx = cv_out.lower().find(header.lower())
             assert idx != -1, f"Missing canonical header '{header}' in {fmt} CV"
             positions.append((idx, header))

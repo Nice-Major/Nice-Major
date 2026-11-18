@@ -10,11 +10,13 @@ and strict ATS single-column linear layout.
 from __future__ import annotations
 
 import html
+import io
 import os
 import re
 import shutil
 import subprocess
 import tempfile
+import zipfile
 from pathlib import Path
 from typing import List, Optional, Union
 
@@ -187,6 +189,94 @@ def render_text_to_pdf_bytes(text: str, title: str = "Application Document") -> 
         f"trailer\n<< /Size {len(objects) + 1} /Root 1 0 R >>\nstartxref\n{xref_pos}\n%%EOF\n".encode("latin-1")
     )
     return bytes(out)
+
+
+def render_markdown_to_docx_bytes(markdown_text: str) -> bytes:
+    """Creates an editable, single-column Word document from generated Markdown."""
+    document_paragraphs: List[str] = []
+    for line in markdown_text.splitlines():
+        stripped = line.strip()
+        if not stripped or stripped == "---":
+            document_paragraphs.append("<w:p/>")
+            continue
+
+        style = "Normal"
+        text = stripped
+        if stripped.startswith("# "):
+            style, text = "Title", stripped[2:].strip()
+        elif stripped.startswith("## "):
+            style, text = "Heading1", stripped[3:].strip()
+        elif stripped.startswith("### "):
+            style, text = "Heading2", stripped[4:].strip()
+        elif stripped.startswith(("- ", "* ")):
+            style, text = "ListParagraph", "\u2022 " + stripped[2:].strip()
+
+        text = re.sub(r"\[([^\]]+)\]\(([^)]+)\)", r"\1 (\2)", text)
+        text = re.sub(r"\*\*([^*]+)\*\*", r"\1", text)
+        text = re.sub(r"(?<!\*)\*([^*]+)\*(?!\*)", r"\1", text)
+        document_paragraphs.append(
+            f'<w:p><w:pPr><w:pStyle w:val="{style}"/></w:pPr>'
+            f'<w:r><w:t xml:space="preserve">{html.escape(text)}</w:t></w:r></w:p>'
+        )
+
+    document_xml = (
+        '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+        '<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">'
+        '<w:body>'
+        + "".join(document_paragraphs)
+        + '<w:sectPr><w:pgSz w:w="11906" w:h="16838"/>'
+        '<w:pgMar w:top="850" w:right="850" w:bottom="850" w:left="850"/>'
+        "</w:sectPr></w:body></w:document>"
+    )
+    styles_xml = (
+        '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+        '<w:styles xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">'
+        '<w:docDefaults><w:rPrDefault><w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial"/>'
+        '<w:sz w:val="20"/></w:rPr></w:rPrDefault><w:pPrDefault><w:pPr>'
+        '<w:spacing w:after="120" w:line="276" w:lineRule="auto"/>'
+        "</w:pPr></w:pPrDefault></w:docDefaults>"
+        '<w:style w:type="paragraph" w:default="1" w:styleId="Normal"><w:name w:val="Normal"/></w:style>'
+        '<w:style w:type="paragraph" w:styleId="Title"><w:name w:val="Title"/>'
+        '<w:rPr><w:b/><w:sz w:val="32"/></w:rPr></w:style>'
+        '<w:style w:type="paragraph" w:styleId="Heading1"><w:name w:val="heading 1"/>'
+        '<w:rPr><w:b/><w:sz w:val="24"/></w:rPr></w:style>'
+        '<w:style w:type="paragraph" w:styleId="Heading2"><w:name w:val="heading 2"/>'
+        '<w:rPr><w:b/><w:sz w:val="22"/></w:rPr></w:style>'
+        '<w:style w:type="paragraph" w:styleId="ListParagraph"><w:name w:val="List Paragraph"/>'
+        "</w:style></w:styles>"
+    )
+    content_types_xml = (
+        '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+        '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">'
+        '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>'
+        '<Default Extension="xml" ContentType="application/xml"/>'
+        '<Override PartName="/word/document.xml" '
+        'ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>'
+        '<Override PartName="/word/styles.xml" '
+        'ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/>'
+        "</Types>"
+    )
+    relationships_xml = (
+        '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+        '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+        '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/>'
+        "</Relationships>"
+    )
+    document_relationships_xml = (
+        '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+        '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+        '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>'
+        "</Relationships>"
+    )
+
+    output = io.BytesIO()
+    with zipfile.ZipFile(output, "w", compression=zipfile.ZIP_DEFLATED) as docx:
+        docx.writestr("[Content_Types].xml", content_types_xml)
+        docx.writestr("_rels/.rels", relationships_xml)
+        docx.writestr("word/document.xml", document_xml)
+        docx.writestr("word/styles.xml", styles_xml)
+        docx.writestr("word/_rels/document.xml.rels", document_relationships_xml)
+    return output.getvalue()
 
 
 def render_html_to_pdf_bytes(

@@ -1,0 +1,64 @@
+name: Career Search Feedback
+
+on:
+  workflow_dispatch:
+    inputs:
+      role:
+        description: Role lens the feedback applies to
+        required: true
+        type: choice
+        options:
+          - Cloud Solutions Architect
+          - Cloud Infrastructure Engineer
+          - Cloud Engineer
+          - Dev(Sec)Ops Engineer
+          - System Administrator
+          - IT Specialist/Administrator
+          - Technical Support Engineer
+          - Azure/AWS DevOps Engineer
+      outcome:
+        description: Explicit preference or application outcome
+        required: true
+        type: choice
+        options:
+          - interested
+          - not_interested
+          - applied
+          - interview
+          - rejected
+          - offer
+
+permissions:
+  contents: read
+
+concurrency:
+  group: career-state-main
+  cancel-in-progress: false
+
+jobs:
+  record_feedback:
+    name: Record Candidate Feedback
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout default branch
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Restore persisted workflow state
+        uses: actions/cache@v4
+        with:
+          path: output/state/
+          key: career-state-${{ runner.os }}-${{ github.run_id }}
+          restore-keys: |
+            career-state-${{ runner.os }}-
+
+      - name: Record aggregate role feedback
+        env:
+          FEEDBACK_ROLE: ${{ inputs.role }}
+          FEEDBACK_OUTCOME: ${{ inputs.outcome }}
+        run: |
+          python -m scheduler.workflow_feedback \
+            --role "$FEEDBACK_ROLE" \
+            --outcome "$FEEDBACK_OUTCOME" \
+            --state-file output/state/role_feedback.json

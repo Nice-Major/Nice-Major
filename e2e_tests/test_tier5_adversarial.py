@@ -320,9 +320,10 @@ class TestTier5TailoringAdversarial:
             "## Core Competencies",
             "## Professional Experience",
             "## Certifications",
-            "## Key Projects",
             "## Education"
         ]
+        if canonical_profile_data.get("projects"):
+            expected_sections.insert(-1, "## Key Projects")
         for sec in expected_sections:
             assert sec in md_cv
 
@@ -426,7 +427,6 @@ class TestTier5DiscoveryAdversarial:
             {"title": "DevOps Engineer", "location": "Remote - Worldwide", "description": "Global remote work from anywhere."},
             {"title": "Cloud Architect", "location": "Remote - EMEA", "description": "Synchronous with CET working hours."},
             {"title": "Platform Engineer", "location": "Remote - CET", "description": "Aligned with UTC+1 / CET business hours."},
-            {"title": "SysAdmin", "location": "Lagos, Nigeria", "description": "Local engineering team in Lagos."},
             {"title": "SRE", "location": "Remote", "description": "B2B Corp-to-Corp (C2C) contracting supported."},
             {"title": "Infrastructure Engineer", "location": "London, UK", "description": "Visa sponsorship and relocation package offered."},
         ]
@@ -435,6 +435,9 @@ class TestTier5DiscoveryAdversarial:
             res = evaluate_eligibility(opp)
             assert res.is_eligible, f"Expected eligible for opportunity: {opp}"
             assert not res.disqualified
+
+        local_only = {"title": "SysAdmin", "location": "Lagos, Nigeria", "description": "Local engineering team in Lagos."}
+        assert not evaluate_eligibility(local_only).is_eligible
 
     def test_t5_16_health_verifier_closed_dom_and_dead_links(self):
         """Verify detect_closed_phrase DOM inspection and is_fresh_date boundaries."""

@@ -179,8 +179,8 @@ class TestObjective2DiscoveryHierarchy:
         p2 = find_profile_data_path(None)
         assert p2 == env_file.resolve()
 
-    def test_tier5_fallback_when_none_provided(self, monkeypatch):
-        """When no path is given and no file exists, load_profile() falls back to embedded default."""
+    def test_profile_loading_requires_the_canonical_file_by_default(self, monkeypatch):
+        """Production profile loading fails closed instead of silently substituting embedded facts."""
         monkeypatch.delenv("CAREER_PROFILE_PATH", raising=False)
         monkeypatch.delenv("CANDIDATE_PROFILE_PATH", raising=False)
 
@@ -189,6 +189,10 @@ class TestObjective2DiscoveryHierarchy:
         orig_find = parser_mod.find_profile_data_path
         parser_mod.find_profile_data_path = lambda custom_path=None: None
         try:
+            with pytest.raises(ProfileNotFoundError):
+                load_profile(None)
+
+            # Legacy fallback remains available only when explicitly requested.
             profile = load_profile(None, allow_fallback=True)
             assert isinstance(profile, CandidateProfile)
             assert "John Victor Aniekwe" in profile.full_name

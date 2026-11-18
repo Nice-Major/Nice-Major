@@ -7,7 +7,7 @@ Milestone: M4 (Daily 8:00 AM Dispatcher & Scheduling Architecture)
 Complies with:
 - Multi-part MIME (multipart/mixed wrapping multipart/alternative + attachments)
 - Strict inline CSS (zero external stylesheets, zero <link rel="stylesheet">)
-- Verified executive metrics ("99.9%" Cloud Uptime SLA and "99%" L3 RCA Resolution)
+- Candidate KPIs are read only from the configured profile.
 - Transparent 5-dimension scoring breakdowns (Skills 35%, Title 25%, Metrics 15%, Mobility 15%, Certs 10%)
 - Clickable opportunity URLs and company links
 - Non-ASCII UTF-8 header sanitization (Header(subject, "utf-8"))
@@ -31,6 +31,18 @@ from config.settings import settings, get_settings
 from engine.scorer import evaluate_job, MatchResult
 from ingestion.models import CandidateProfile
 from ingestion.parser import load_profile, load_profile_from_dict
+from ingestion.text_utils import application_filename
+
+SOURCE_CREDITS = {
+    "remoteok": ("Remote OK", "https://remoteok.com/"),
+    "weworkremotely": ("We Work Remotely", "https://weworkremotely.com/"),
+    "jobicy": ("Jobicy", "https://jobicy.com/"),
+    "remotive": ("Remotive", "https://remotive.com/"),
+    "arbeitnow": ("Arbeitnow", "https://www.arbeitnow.com/"),
+    "greenhouse": ("Greenhouse", "https://www.greenhouse.com/"),
+    "lever": ("Lever", "https://www.lever.co/"),
+    "ashby": ("Ashby", "https://www.ashbyhq.com/"),
+}
 
 
 # ============================================================================
@@ -45,7 +57,7 @@ def _normalize_profile(
         return candidate
     if isinstance(candidate, dict):
         return load_profile_from_dict(candidate)
-    return load_profile(allow_fallback=True)
+    return load_profile()
 
 
 def _extract_job_field(job: Any, field_name: str, default: Any = "") -> Any:
@@ -53,6 +65,15 @@ def _extract_job_field(job: Any, field_name: str, default: Any = "") -> Any:
     if isinstance(job, dict):
         return job.get(field_name, default)
     return getattr(job, field_name, default)
+
+
+def _safe_attachment_filename(filename: Any) -> str:
+    """Removes path components and control characters without renaming attachments."""
+    basename = re.split(r"[/\\]", str(filename or ""))[-1]
+    basename = re.sub(r"[\x00-\x1f\x7f]", "", basename)
+    if basename in ("", ".", ".."):
+        return "attachment"
+    return basename
 
 
 def _score_and_sort_opportunities(
@@ -119,7 +140,7 @@ def format_digest_html(
 
     Strict Compliance:
     - Pure inline CSS (NO external stylesheets or <link rel="stylesheet">).
-    - Contains executive KPI metrics ("99.9%" uptime SLA and "99%" RCA resolution).
+    - Includes only candidate-profile KPIs and credentials.
     - Clickable job URLs and corporate links.
     - Transparent 5-dimension score breakdown tables and skill gap pills.
     - Graceful zero-opportunities empty state.
@@ -129,9 +150,9 @@ def format_digest_html(
     opp_list = list(opportunities or [])
     scored_opps = _score_and_sort_opportunities(opp_list, profile)
 
-    cand_name = profile.candidate.full_name or "John Victor Aniekwe"
-    cand_email = profile.candidate.email or "aniekwevictor9@gmail.com"
-    cand_loc = profile.candidate.location or "Lagos, Nigeria (UTC+1 / CET Synchronous)"
+    cand_name = profile.candidate.full_name or "Candidate"
+    cand_email = profile.candidate.email
+    cand_loc = profile.candidate.location
 
     # Inline Styles Map
     st_body = "margin: 0; padding: 20px 0; background-color: #f4f6f9; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #1e293b; line-height: 1.5;"
@@ -175,24 +196,22 @@ def format_digest_html(
     # Content
     html_parts.append(f"    <div style=\"{st_content}\">")
 
-    # Executive Verified Competencies Box (Guarantees 99.9% and 99% metrics)
-    html_parts.append(f"      <div style=\"{st_kpi_box}\">")
-    html_parts.append(f"        <div style=\"{st_kpi_title}\">Verified Candidate Enterprise SLA & Credentials</div>")
-    html_parts.append("        <div>")
-    html_parts.append(f"          <span style=\"{st_kpi_badge}\">99.9%</span><span style=\"{st_kpi_desc}\">Enterprise Cloud Uptime SLA (AWS & Azure)</span>")
-    html_parts.append(f"          <span style=\"{st_kpi_badge}\">99%</span><span style=\"{st_kpi_desc}\">First-Day L3 RCA Issue Resolution Rate</span>")
-    html_parts.append("        </div>")
-    html_parts.append("        <div style=\"margin-top: 8px;\">")
-    html_parts.append(f"          <span style=\"{st_kpi_badge}\">&gt;60%</span><span style=\"{st_kpi_desc}\">AKS AI Prediction Accuracy</span>")
-    html_parts.append(f"          <span style=\"{st_kpi_badge}\">&lt;15 Min</span><span style=\"{st_kpi_desc}\">Multi-Cloud IaC Provisioning Speed</span>")
-    html_parts.append("        </div>")
-    html_parts.append("      </div>")
+    if profile.kpi_metrics:
+        html_parts.append(f"      <div style=\"{st_kpi_box}\">")
+        html_parts.append(f"        <div style=\"{st_kpi_title}\">Profile-listed Outcomes</div>")
+        for metric in profile.kpi_metrics:
+            label = " ".join(part.strip() for part in (metric.metric, metric.context) if part.strip())
+            html_parts.append(
+                f"        <div><span style=\"{st_kpi_badge}\">{html.escape(metric.value)}</span>"
+                f"<span style=\"{st_kpi_desc}\">{html.escape(label)}</span></div>"
+            )
+        html_parts.append("      </div>")
 
     # Empty State vs Opportunities
     if not scored_opps:
         html_parts.append("      <div style=\"text-align: center; padding: 40px 20px;\">")
         html_parts.append("        <h3 style=\"color: #475569; margin-bottom: 8px;\">No Opportunities Discovered Today</h3>")
-        html_parts.append("        <p style=\"color: #64748b; font-size: 14px;\">No external postings matched your strict remote Nigeria / relocation eligibility criteria during this automated discovery cycle. All existing positions are up to date.</p>")
+        html_parts.append("        <p style=\"color: #64748b; font-size: 14px;\">No new external postings matched the configured remote-work or visa-sponsorship criteria during this discovery cycle.</p>")
         html_parts.append("      </div>")
     else:
         # High-Level Summary Table
@@ -293,30 +312,38 @@ def format_digest_html(
             cl_att = _extract_job_field(opp, "attached_letter_filename", "")
             if cv_att or res.overall_score >= 75.0:
                 if not cv_att:
-                    from ingestion.text_utils import safe_filename
-                    cv_att = safe_filename("John", "Aniekwe", f"{company}_{res.target_role}", "CV", "pdf")
-                    cl_att = safe_filename("John", "Aniekwe", f"{company}_{res.target_role}", "Cover_Letter", "pdf")
-                top_kws = ", ".join(res.matched_skills[:4]) if res.matched_skills else "AWS, Azure, Kubernetes (KCNA), Terraform"
+                    cv_att = application_filename(profile, company, "CV")
+                    cl_att = application_filename(profile, company, "Cover Letter")
+                top_kws = ", ".join(res.matched_skills[:4]) if res.matched_skills else "no profile-listed skills matched"
                 html_parts.append("        <div style=\"background-color: #eff6ff; border-left: 3px solid #2563eb; padding: 10px 12px; margin-bottom: 12px; font-size: 12px; color: #1e3a8a;\">")
                 html_parts.append(f"          <div><strong>Tied PDF Application Package:</strong> <code>{html.escape(str(cv_att))}</code> &amp; <code>{html.escape(str(cl_att))}</code></div>")
-                html_parts.append("          <div style=\"margin-top: 4px;\"><strong>Succinct Application Instructions:</strong> (1) Attach the two tied PDFs above; (2) Apply via the direct link below; (3) Highlight <strong>" + html.escape(top_kws) + "</strong> and verified SLAs (99.9% Uptime, 99% L3 RCA, &gt;60% AI Accuracy); (4) Offer Direct Hire or B2B C2C via <strong>Stepcon Solutions (RC - 8284984)</strong>.</div>")
+                html_parts.append("          <div style=\"margin-top: 4px;\"><strong>Editable Documents:</strong> Word CV and cover-letter files are attached alongside the PDFs.</div>")
+                html_parts.append("          <div style=\"margin-top: 4px;\"><strong>Succinct Application Instructions:</strong> (1) Attach the two tied PDFs above; (2) Apply via the direct link below; (3) Highlight profile-listed skills relevant to the position: <strong>" + html.escape(top_kws) + "</strong>.</div>")
                 html_parts.append("        </div>")
 
             # Direct Link
             html_parts.append(f"        <div><a href=\"{html.escape(str(url))}\" style=\"{st_button}\">View Posting ({html.escape(str(url))})</a></div>")
+            source_id = str(_extract_job_field(opp, "source", "")).lower()
+            if source_id in SOURCE_CREDITS:
+                source_name, source_url = SOURCE_CREDITS[source_id]
+                html_parts.append(
+                    f'        <div style="font-size: 11px; color: #64748b; margin-top: 5px;">Source: '
+                    f'<a href="{html.escape(source_url)}">{html.escape(source_name)}</a></div>'
+                )
             html_parts.append("      </div>")
 
     # Tailoring Section Note
     html_parts.append("      <div style=\"margin-top: 24px; padding: 16px; background-color: #f1f5f9; border-radius: 6px; font-size: 13px; color: #334155;\">")
-    html_parts.append("        <strong>Application Package Attachments:</strong> For high-alignment opportunities (&ge;75%), customized single-column ATS CVs and STAR-methodology cover letters have been automatically tailored and attached to this email.")
+    html_parts.append("        <strong>Application Package Attachments:</strong> For high-alignment opportunities (&ge;75%), profile-grounded PDF CVs and cover letters are attached with editable Word documents.")
     html_parts.append("      </div>")
 
     html_parts.append("    </div>")
 
     # Footer
     html_parts.append(f"    <div style=\"{st_footer}\">")
-    html_parts.append(f"      <p style=\"margin: 0 0 4px 0;\">Stepcon Solutions (RC - 8284984) Career Dispatch Automation Suite</p>")
-    html_parts.append(f"      <p style=\"margin: 0;\">Candidate: {html.escape(cand_name)} &bull; {html.escape(cand_email)} &bull; {html.escape(cand_loc)}</p>")
+    html_parts.append("      <p style=\"margin: 0 0 4px 0;\">Career Dispatch Automation Suite</p>")
+    footer_contact = " &bull; ".join(value for value in (cand_email, cand_loc) if value)
+    html_parts.append(f"      <p style=\"margin: 0;\">Candidate: {html.escape(cand_name)}{(' &bull; ' + html.escape(footer_contact)) if footer_contact else ''}</p>")
     html_parts.append("    </div>")
 
     html_parts.append("  </div>")
@@ -343,27 +370,27 @@ def format_digest_text(
     opp_list = list(opportunities or [])
     scored_opps = _score_and_sort_opportunities(opp_list, profile)
 
-    cand_name = profile.candidate.full_name or "John Victor Aniekwe"
-    cand_email = profile.candidate.email or "aniekwevictor9@gmail.com"
-    cand_loc = profile.candidate.location or "Lagos, Nigeria (UTC+1 / CET Synchronous)"
+    cand_name = profile.candidate.full_name or "Candidate"
+    cand_email = profile.candidate.email
+    cand_loc = profile.candidate.location
 
     lines: List[str] = []
     lines.append("=" * 72)
     lines.append("DAILY CAREER & OPPORTUNITY DIGEST")
-    lines.append(f"Prepared for: {cand_name} <{cand_email}>")
+    lines.append(f"Prepared for: {cand_name}" + (f" <{cand_email}>" if cand_email else ""))
     lines.append(f"Date: {active_date}")
-    lines.append(f"Location: {cand_loc}")
+    if cand_loc:
+        lines.append(f"Location: {cand_loc}")
     lines.append(f"Evaluated Opportunities: {len(scored_opps)}")
     lines.append("=" * 72)
     lines.append("")
 
-    # Executive Verified Competencies
-    lines.append("VERIFIED CANDIDATE ENTERPRISE CREDENTIALS & SLA:")
-    lines.append("  - 99.9% Enterprise Cloud Uptime SLA sustained across AWS & Azure estates")
-    lines.append("  - 99% First-Day L3 Issue Resolution Rate for Azure App Service via RCA")
-    lines.append("  - >60% AKS AI Prediction Accuracy on Azure OpenAI microservices")
-    lines.append("  - <15 Min Multi-Cloud IaC Provisioning Speed (Terraform & ARM/Bicep)")
-    lines.append("")
+    if profile.kpi_metrics:
+        lines.append("PROFILE-LISTED OUTCOMES:")
+        for metric in profile.kpi_metrics:
+            label = " ".join(part.strip() for part in (metric.metric, metric.context) if part.strip())
+            lines.append(f"  - {metric.value}: {label}")
+        lines.append("")
 
     if not scored_opps:
         lines.append("-" * 72)
@@ -404,20 +431,25 @@ def format_digest_text(
             cl_att = _extract_job_field(opp, "attached_letter_filename", "")
             if cv_att or res.overall_score >= 75.0:
                 if not cv_att:
-                    from ingestion.text_utils import safe_filename
-                    cv_att = safe_filename("John", "Aniekwe", f"{company}_{res.target_role}", "CV", "pdf")
-                    cl_att = safe_filename("John", "Aniekwe", f"{company}_{res.target_role}", "Cover_Letter", "pdf")
+                    cv_att = application_filename(profile, company, "CV")
+                    cl_att = application_filename(profile, company, "Cover Letter")
                 lines.append(f"    Tied PDF Package: {cv_att} | {cl_att}")
-                lines.append("    Succinct Action:  Attach the tied PDFs above, open the Application URL, and emphasize matched skills + 99.9% SLA / Stepcon C2C (RC - 8284984).")
+                lines.append("    Editable Word CV and cover-letter documents are also attached.")
+                matched = ", ".join(res.matched_skills[:5]) if res.matched_skills else "no profile-listed skills matched"
+                lines.append(f"    Succinct Action:  Attach the PDFs, open the Application URL, and highlight profile-listed matched skills: {matched}.")
             lines.append(f"    Application URL: {url}")
+            source_id = str(_extract_job_field(opp, "source", "")).lower()
+            if source_id in SOURCE_CREDITS:
+                source_name, source_url = SOURCE_CREDITS[source_id]
+                lines.append(f"    Job Source: {source_name} ({source_url})")
             lines.append("-" * 72)
 
     lines.append("")
     lines.append("APPLICATION PACKAGES:")
-    lines.append("  ATS-tailored CVs and STAR-methodology cover letters for top positions")
-    lines.append("  are attached to this email.")
+    lines.append("  ATS-tailored PDF CVs, cover letters, and editable Word documents")
+    lines.append("  for top positions are attached to this email.")
     lines.append("")
-    lines.append("Stepcon Solutions (RC - 8284984) Automated Career Pipeline")
+    lines.append("Career Dispatch Automation Pipeline")
     lines.append("=" * 72)
 
     return "\n".join(lines)
@@ -515,8 +547,13 @@ def build_digest_email(
             else:
                 continue
 
-            part = MIMEApplication(content_bytes, Name=filename)
-            part.add_header("Content-Disposition", f'attachment; filename="{filename}"')
+            safe_filename = _safe_attachment_filename(filename)
+            mime_subtype = {
+                ".pdf": "pdf",
+                ".docx": "vnd.openxmlformats-officedocument.wordprocessingml.document",
+            }.get(Path(safe_filename).suffix.lower(), "octet-stream")
+            part = MIMEApplication(content_bytes, _subtype=mime_subtype, Name=safe_filename)
+            part.add_header("Content-Disposition", "attachment", filename=safe_filename)
             msg.attach(part)
 
     return msg

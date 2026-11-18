@@ -13,19 +13,27 @@ from __future__ import annotations
 import hashlib
 import json
 import logging
+import os
 import re
 import xml.etree.ElementTree as ET
 from abc import ABC, abstractmethod
+from pathlib import Path
 from typing import Any, Dict, List, Optional, Set, Tuple, Union
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
-from config.settings import settings
+from config.settings import load_dotenv_file, settings
 from discovery.models import JobOpportunity, JobQueryParams, Opportunity
 
 logger = logging.getLogger(__name__)
 
 USER_AGENT: str = "CareerAutomation/1.0 (+https://nice-major.github.io/Nice-Major/; OpportunityDiscovery)"
+DEFAULT_MAX_RESPONSE_BYTES = 512 * 1024
+ARBEITNOW_MAX_RESPONSE_BYTES = 4 * 1024 * 1024
+JOBICY_MAX_RESPONSE_BYTES = 2 * 1024 * 1024
+COMPANY_BOARD_MAX_RESPONSE_BYTES = 10 * 1024 * 1024
+MAX_COMPANY_BOARDS_PER_SOURCE = 20
+COMPANY_BOARD_CATALOG_PATH = Path(__file__).resolve().parent.parent / "data" / "company-boards.json"
 
 CANONICAL_TARGET_ROLES: List[str] = [
     "Cloud Solutions Architect",
@@ -37,6 +45,41 @@ CANONICAL_TARGET_ROLES: List[str] = [
     "Technical Support Engineer",
     "Azure/AWS DevOps Engineer",
 ]
+
+
+def _source_setting(name: str) -> str:
+    """Resolve provider configuration from the environment or local .env file."""
+    value = os.environ.get(name, "").strip()
+    if value:
+        return value
+    return load_dotenv_file().get(name, "").strip()
+
+
+def load_curated_board_entries(source_id: str) -> List[Dict[str, str]]:
+    """Load validated public board identifiers from the repository's curated catalog."""
+    try:
+        with COMPANY_BOARD_CATALOG_PATH.open("r", encoding="utf-8") as catalog_file:
+            catalog = json.load(catalog_file)
+    except (OSError, json.JSONDecodeError) as exc:
+        raise RuntimeError(
+            f"Unable to read curated company-board catalog at {COMPANY_BOARD_CATALOG_PATH}: {exc}"
+        ) from exc
+
+    sources = catalog.get("sources") if isinstance(catalog, dict) else None
+    entries = sources.get(source_id) if isinstance(sources, dict) else None
+    if not isinstance(entries, list):
+        raise ValueError(f"Company-board catalog must define a list for source '{source_id}'.")
+
+    validated: List[Dict[str, str]] = []
+    for entry in entries:
+        if not isinstance(entry, dict):
+            raise ValueError(f"Company-board catalog entry for '{source_id}' must be an object.")
+        board = str(entry.get("board", "")).strip()
+        company = str(entry.get("company", "")).strip()
+        if not board or not re.fullmatch(r"[A-Za-z0-9._-]+", board) or not company:
+            raise ValueError(f"Invalid board or company name in '{source_id}' company-board catalog.")
+        validated.append({"board": board, "company": company})
+    return validated
 
 
 # ============================================================================
@@ -465,7 +508,12 @@ class BaseSourceAdapter(ABC):
     source_id: str = "base"
     name: str = "Base Source Adapter"
 
-    def fetch_url(self, url: str, timeout: int = 5) -> Tuple[int, bytes]:
+    def fetch_url(
+        self,
+        url: str,
+        timeout: int = 5,
+        max_bytes: int = DEFAULT_MAX_RESPONSE_BYTES,
+    ) -> Tuple[int, bytes]:
         """Safely fetch HTTP endpoint using Python standard urllib with legitimate User-Agent."""
         req = Request(
             url,
@@ -477,12 +525,12 @@ class BaseSourceAdapter(ABC):
         try:
             with urlopen(req, timeout=timeout) as response:
                 status = getattr(response, "status", 200)
-                body = response.read(524288)  # Read up to 512KB
+                body = response.read(max_bytes)
                 return status, body
         except HTTPError as e:
             return e.code, b""
         except (URLError, Exception) as e:
-            logger.debug(f"Source adapter fetch failed for {url}: {e}")
+            logger.debug("Source adapter fetch failed for %s: %s", url, e)
             return 0, b""
 
     @abstractmethod
@@ -535,9 +583,7 @@ class RemoteOKAdapter(BaseSourceAdapter):
                     raw_data=item,
                 )
                 opportunities.append(opp)
-                if len(opportunities) >= limit:
-                    break
-            return opportunities
+            return _filter_roles(opportunities, query_roles)[:limit]
         except Exception as e:
             logger.debug(f"RemoteOK parsing error: {e}")
             return []
@@ -578,11 +624,21 @@ class WeWorkRemotelyAdapter(BaseSourceAdapter):
                         parts = raw_title.split(":", 1)
                         company = parts[0].strip()
                         title = parts[1].strip()
+                    restricted_remote = re.search(
+                        r"\bremote\s+(?:eligible|available)\s+in\s+([A-Za-z][A-Za-z -]*?)(?=\s*(?:[)\],.;:]|$))",
+                        f"{raw_title} {description}",
+                        flags=re.IGNORECASE,
+                    )
+                    location = (
+                        f"Remote - {restricted_remote.group(1).strip()}"
+                        if restricted_remote
+                        else "Remote - Worldwide"
+                    )
 
                     opp = JobOpportunity(
                         title=title,
                         company=company or "Remote Company",
-                        location="Remote - Worldwide",
+                        location=location,
                         description=description,
                         url=link,
                         source=self.source_id,
@@ -590,19 +646,78 @@ class WeWorkRemotelyAdapter(BaseSourceAdapter):
                         is_remote=True,
                     )
                     opportunities.append(opp)
-                    if len(opportunities) >= limit:
-                        return opportunities
             except Exception as e:
                 logger.debug(f"WWR feed parsing error: {e}")
                 continue
-        return opportunities
+        return _filter_roles(opportunities, query_roles)[:limit]
 
 
 class JobicyAdapter(BaseSourceAdapter):
     """Adapter for Jobicy public remote jobs API."""
     source_id = "jobicy"
     name = "Jobicy Remote Jobs"
-    BASE_URL = "https://jobicy.com/api/v2/remote-jobs?count=20"
+    BASE_URL = "https://jobicy.com/api/jobs"
+
+    def fetch(
+        self,
+        query_roles: Optional[List[str]] = None,
+        limit: int = 20,
+        timeout: int = 5,
+    ) -> List[JobOpportunity]:
+        count = min(max(limit, 1), 100)
+        status, body = self.fetch_url(
+            f"{self.BASE_URL}?count={count}",
+            timeout=timeout,
+            max_bytes=JOBICY_MAX_RESPONSE_BYTES,
+        )
+        if status != 200 or not body:
+            return []
+        try:
+            data = json.loads(body.decode("utf-8"))
+            jobs = data.get("jobs", []) if isinstance(data, dict) else []
+            if not isinstance(jobs, list):
+                logger.warning("Jobicy response did not contain a jobs list.")
+                return []
+            opportunities: List[JobOpportunity] = []
+            for item in jobs:
+                if not isinstance(item, dict):
+                    continue
+                geography = str(item.get("jobGeo", "") or "").strip()
+                location = (
+                    f"Remote - {geography}"
+                    if geography and geography.casefold() not in {"remote", "n/a", "not specified"}
+                    else "Remote"
+                )
+                opp = JobOpportunity(
+                    id=str(item.get("id", "")),
+                    title=str(item.get("jobTitle", "")),
+                    company=str(item.get("companyName", "")),
+                    location=location,
+                    description=str(item.get("jobDescription", "")),
+                    url=str(item.get("url", "")),
+                    source=self.source_id,
+                    posted_date=str(
+                        item.get("publishedAt")
+                        or item.get("pubDate")
+                        or item.get("publicationDate")
+                        or ""
+                    ).split("T")[0],
+                    is_remote=True,
+                    salary_range=str(item.get("salaryRange") or item.get("annualSalaryMin") or ""),
+                    raw_data=item,
+                )
+                opportunities.append(opp)
+            return _filter_roles(opportunities, query_roles)[:limit]
+        except (AttributeError, TypeError, ValueError, json.JSONDecodeError) as exc:
+            logger.warning("Jobicy response parsing failed: %s", exc)
+            return []
+
+
+class RemotiveAdapter(BaseSourceAdapter):
+    """Single-request daily adapter for Remotive's public remote-jobs API."""
+    source_id = "remotive"
+    name = "Remotive Remote Jobs"
+    BASE_URL = "https://remotive.com/api/remote-jobs?limit=100"
 
     def fetch(
         self,
@@ -614,30 +729,232 @@ class JobicyAdapter(BaseSourceAdapter):
         if status != 200 or not body:
             return []
         try:
-            data = json.loads(body.decode("utf-8"))
-            jobs = data.get("jobs", [])
-            opportunities: List[JobOpportunity] = []
+            jobs = json.loads(body.decode("utf-8")).get("jobs", [])
+            opportunities = []
             for item in jobs:
-                opp = JobOpportunity(
+                if not isinstance(item, dict):
+                    continue
+                opportunities.append(JobOpportunity(
                     id=str(item.get("id", "")),
-                    title=str(item.get("jobTitle", "")),
-                    company=str(item.get("companyName", "")),
-                    location=str(item.get("jobGeo", "Remote")),
-                    description=str(item.get("jobDescription", "")),
+                    title=str(item.get("title", "")),
+                    company=str(item.get("company_name", "")),
+                    location=str(item.get("candidate_required_location", "Remote")),
+                    description=str(item.get("description", "")),
                     url=str(item.get("url", "")),
                     source=self.source_id,
-                    posted_date=str(item.get("pubDate", "")).split("T")[0],
+                    posted_date=str(item.get("publication_date", "")).split("T")[0],
                     is_remote=True,
-                    salary_range=str(item.get("annualSalaryMin", "")),
+                    tags=[str(item.get("category", ""))] + [
+                        str(tag) for tag in item.get("tags", [])
+                    ],
                     raw_data=item,
-                )
-                opportunities.append(opp)
-                if len(opportunities) >= limit:
-                    break
-            return opportunities
-        except Exception as e:
-            logger.debug(f"Jobicy API parsing error: {e}")
+                ))
+            return _filter_roles(opportunities, query_roles)[:limit]
+        except (AttributeError, TypeError, ValueError, json.JSONDecodeError) as exc:
+            logger.warning("Remotive response parsing failed: %s", exc)
             return []
+
+
+class ArbeitnowAdapter(BaseSourceAdapter):
+    """Adapter for Arbeitnow's public job-board API."""
+    source_id = "arbeitnow"
+    name = "Arbeitnow Job Board"
+    BASE_URL = "https://www.arbeitnow.com/api/job-board-api"
+
+    def fetch(
+        self,
+        query_roles: Optional[List[str]] = None,
+        limit: int = 20,
+        timeout: int = 5,
+    ) -> List[JobOpportunity]:
+        status, body = self.fetch_url(
+            self.BASE_URL,
+            timeout=timeout,
+            max_bytes=ARBEITNOW_MAX_RESPONSE_BYTES,
+        )
+        if status != 200 or not body:
+            return []
+        try:
+            jobs = json.loads(body.decode("utf-8")).get("data", [])
+            opportunities = []
+            for item in jobs:
+                if not isinstance(item, dict):
+                    continue
+                opportunities.append(JobOpportunity(
+                    id=str(item.get("slug", "")),
+                    title=str(item.get("title", "")),
+                    company=str(item.get("company_name", "")),
+                    location=str(item.get("location", "")),
+                    description=str(item.get("description", "")),
+                    url=str(item.get("url", "")),
+                    source=self.source_id,
+                    posted_date=str(item.get("created_at", ""))[:10],
+                    is_remote=bool(item.get("remote", False)),
+                    tags=[str(tag) for tag in item.get("tags", [])],
+                    raw_data=item,
+                ))
+            return _filter_roles(opportunities, query_roles)[:limit]
+        except (AttributeError, TypeError, ValueError, json.JSONDecodeError) as exc:
+            logger.warning("Arbeitnow response parsing failed: %s", exc)
+            return []
+
+
+class CompanyBoardAdapter(BaseSourceAdapter):
+    """Public job listings from explicitly configured Greenhouse, Lever, or Ashby boards."""
+
+    def __init__(self, source_id: str, name: str, env_var: str):
+        self.source_id = source_id
+        self.name = name
+        self.env_var = env_var
+
+    def _board_url(self, board: str) -> str:
+        if self.source_id == "greenhouse":
+            return f"https://boards-api.greenhouse.io/v1/boards/{board}/jobs?content=true"
+        if self.source_id == "lever":
+            is_eu = board.casefold().startswith("eu:")
+            site_name = board[3:] if is_eu else board
+            api_host = "api.eu.lever.co" if is_eu else "api.lever.co"
+            return f"https://{api_host}/v0/postings/{site_name}?mode=json"
+        return f"https://api.ashbyhq.com/posting-api/job-board/{board}"
+
+    def fetch(
+        self,
+        query_roles: Optional[List[str]] = None,
+        limit: int = 20,
+        timeout: int = 5,
+    ) -> List[JobOpportunity]:
+        if limit <= 0:
+            return []
+        boards = load_curated_board_entries(self.source_id)
+        seen_boards = {entry["board"].casefold() for entry in boards}
+        for configured_board in _source_setting(self.env_var).split(","):
+            board = configured_board.strip()
+            board_name = board[3:] if self.source_id == "lever" and board.casefold().startswith("eu:") else board
+            if re.fullmatch(r"[A-Za-z0-9._-]+", board_name) and board.casefold() not in seen_boards:
+                boards.append({"board": board, "company": board_name})
+                seen_boards.add(board.casefold())
+        if not boards:
+            logger.info("%s adapter has no configured board identifiers (%s).", self.name, self.env_var)
+            return []
+        if len(boards) > MAX_COMPANY_BOARDS_PER_SOURCE:
+            logger.warning(
+                "%s has %d configured boards; limiting this run to %d.",
+                self.name,
+                len(boards),
+                MAX_COMPANY_BOARDS_PER_SOURCE,
+            )
+            boards = boards[:MAX_COMPANY_BOARDS_PER_SOURCE]
+
+        opportunities_by_board: List[List[JobOpportunity]] = []
+        for board_entry in boards:
+            board = board_entry["board"]
+            board_company = board_entry["company"]
+            status, body = self.fetch_url(
+                self._board_url(board),
+                timeout=timeout,
+                max_bytes=COMPANY_BOARD_MAX_RESPONSE_BYTES,
+            )
+            if status != 200 or not body:
+                if status:
+                    logger.warning("%s board '%s' returned HTTP %d.", self.name, board, status)
+                continue
+            try:
+                payload = json.loads(body.decode("utf-8"))
+                if self.source_id == "greenhouse":
+                    postings = payload.get("jobs", [])
+                elif self.source_id == "lever":
+                    postings = payload if isinstance(payload, list) else []
+                else:
+                    postings = payload.get("jobs", [])
+                board_opportunities: List[JobOpportunity] = []
+                for item in postings:
+                    if not isinstance(item, dict):
+                        continue
+                    categories = item.get("categories")
+                    if not isinstance(categories, dict):
+                        categories = {}
+                    if self.source_id == "lever":
+                        title = item.get("text", item.get("title", ""))
+                        location_value = categories.get("location", item.get("location", ""))
+                        description = (
+                            item.get("descriptionPlain")
+                            or item.get("description")
+                            or item.get("openingPlain")
+                            or ""
+                        )
+                        posting_url = item.get("hostedUrl", item.get("applyUrl", ""))
+                        is_remote = str(item.get("workplaceType", "")).casefold() == "remote"
+                        posted_date = item.get("createdAt", item.get("updatedAt", ""))
+                    else:
+                        title = item.get("title", "")
+                        location_value = item.get("location", categories.get("location", ""))
+                        description = item.get(
+                            "content",
+                            item.get("descriptionPlain", item.get("description", "")),
+                        )
+                        posting_url = item.get(
+                            "absolute_url",
+                            item.get("hostedUrl", item.get("jobUrl", "")),
+                        )
+                        is_remote = bool(item.get("isRemote", False))
+                        posted_date = item.get("updatedAt", item.get("createdAt", ""))
+                    if isinstance(location_value, dict):
+                        location_value = location_value.get("name", "")
+                    if isinstance(description, dict):
+                        description = description.get("text", "")
+                    company = item.get("companyName", board_company)
+                    board_opportunities.append(JobOpportunity(
+                        id=str(item.get("id", "")),
+                        title=str(title),
+                        company=str(company or board_company),
+                        location=str(location_value or ""),
+                        description=str(description or ""),
+                        url=str(posting_url),
+                        source=self.source_id,
+                        posted_date=str(posted_date)[:10],
+                        is_remote=is_remote,
+                        raw_data=item,
+                    ))
+                opportunities_by_board.append(_filter_roles(board_opportunities, query_roles))
+            except (AttributeError, TypeError, ValueError, json.JSONDecodeError) as exc:
+                logger.warning("%s board '%s' response parsing failed: %s", self.name, board, exc)
+        diversified: List[JobOpportunity] = []
+        for posting_index in range(max((len(jobs) for jobs in opportunities_by_board), default=0)):
+            for board_jobs in opportunities_by_board:
+                if posting_index < len(board_jobs):
+                    diversified.append(board_jobs[posting_index])
+                    if len(diversified) >= limit:
+                        return diversified
+        return diversified
+
+
+def _filter_roles(
+    opportunities: List[JobOpportunity],
+    query_roles: Optional[List[str]],
+) -> List[JobOpportunity]:
+    if not query_roles:
+        return opportunities
+    terms = set()
+    for role in query_roles:
+        normalized = role.casefold()
+        if any(keyword in normalized for keyword in ("devops", "dev(sec)ops")):
+            terms.update(("devops", "devsecops", "platform", "site reliability", "sre"))
+        if "cloud" in normalized:
+            terms.add("cloud")
+        if any(keyword in normalized for keyword in ("system", "infrastructure")):
+            terms.update(("system", "infrastructure", "administrator", "linux"))
+        if any(keyword in normalized for keyword in ("support", "specialist")):
+            terms.update(("support", "specialist", "it administrator"))
+        if not terms:
+            terms.update(re.findall(r"[a-z0-9]+", normalized))
+    return [
+        opportunity
+        for opportunity in opportunities
+        if any(
+            term in f"{opportunity.title} {' '.join(opportunity.tags)}".casefold()
+            for term in terms
+        )
+    ]
 
 
 class RssFeedAdapter(BaseSourceAdapter):
@@ -680,7 +997,7 @@ class RssFeedAdapter(BaseSourceAdapter):
                 opportunities.append(opp)
                 if len(opportunities) >= limit:
                     break
-            return opportunities
+            return _filter_roles(opportunities, query_roles)[:limit]
         except Exception as e:
             logger.debug(f"Generic RSS feed parse error: {e}")
             return []
@@ -765,6 +1082,11 @@ class AdapterRegistry:
         self.register(RemoteOKAdapter())
         self.register(WeWorkRemotelyAdapter())
         self.register(JobicyAdapter())
+        self.register(RemotiveAdapter())
+        self.register(ArbeitnowAdapter())
+        self.register(CompanyBoardAdapter("greenhouse", "Greenhouse Public Job Boards", "GREENHOUSE_BOARD_TOKENS"))
+        self.register(CompanyBoardAdapter("lever", "Lever Public Job Boards", "LEVER_SITE_NAMES"))
+        self.register(CompanyBoardAdapter("ashby", "Ashby Public Job Boards", "ASHBY_BOARD_NAMES"))
 
     def register(self, adapter: BaseSourceAdapter) -> None:
         self._adapters[adapter.source_id.lower()] = adapter
@@ -825,8 +1147,10 @@ def fetch_opportunities(
         deduped = deduplicate_opportunities(normalized)
         return deduped[:limit]
 
-    # Live discovery execution across registered source adapters
-    results: List[JobOpportunity] = []
+    # Live discovery execution across registered source adapters.
+    # Preserve per-source batches so a large feed cannot consume the global limit
+    # before the remaining providers have contributed.
+    source_batches: List[List[JobOpportunity]] = []
     adapters_to_use: List[BaseSourceAdapter] = []
 
     if sources:
@@ -844,13 +1168,22 @@ def fetch_opportunities(
     for adapter in adapters_to_use:
         try:
             found = adapter.fetch(query_roles=roles_to_query, limit=limit)
-            results.extend(found)
+            normalized_source = normalize_opportunities(found)
+            source_batches.append(normalized_source)
+            logger.info("Discovery source %s returned %d valid postings.", adapter.source_id, len(normalized_source))
         except Exception as e:
             logger.warning(f"Adapter '{adapter.name}' failed during fetch: {e}")
 
-    # Fall back to synthetic if live search returned nothing or on unknown sources
-    if not results:
-        results = get_synthetic_opportunities(query_roles=roles_to_query)
+    if not any(source_batches):
+        logger.warning(
+            "Live discovery returned no postings from configured sources; synthetic opportunities are not used in live mode."
+        )
+
+    results: List[JobOpportunity] = []
+    for index in range(max((len(batch) for batch in source_batches), default=0)):
+        for batch in source_batches:
+            if index < len(batch):
+                results.append(batch[index])
 
     normalized = normalize_opportunities(results)
     deduped = deduplicate_opportunities(normalized)

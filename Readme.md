@@ -1,45 +1,23 @@
 # Career Automation & Stepcon Solutions (`RC - 8284984`) Workflow Suite
 
-An end-to-end, zero-cost career development, ATS document tailoring, opportunity discovery, daily 8:00 AM email dispatch, and B2B IT consultancy pipeline built specifically for **John Victor Aniekwe** (`aniekwevictor9@gmail.com`) and **Stepcon Solutions** (`RC - 8284984`, registered with the Nigerian Corporate Affairs Commission).
+An end-to-end career development, ATS document tailoring, multi-source opportunity discovery, daily email dispatch, and B2B IT consultancy pipeline configured for **John Victor Aniekwe** and **Stepcon Solutions** (`RC - 8284984`).
 
 ---
 
 ## 1. Where the Single Source of Truth Lives
 
-After reviewing and reconciling all three of your CV PDFs, your LinkedIn profile (`https://www.linkedin.com/in/victor-aniekwe`), and your GitHub repository (`https://github.com/Nice-Major/Nice-Major.git`), your **Single Source of Truth** is located at:
+The profile currently used by the application is stored at:
 
 - **Primary File**: [`data/profile-data.json`](data/profile-data.json)
 - **Schema & Validator**: [`ingestion/models.py`](ingestion/models.py) and [`ingestion/parser.py`](ingestion/parser.py)
 
-### What Was Reconciled & Standardized in Your Single Source of Truth
-1. **Unified Identity & Contact Metadata**:
-   - Standardizes your name (`John Victor Aniekwe`), contact details (`aniekwevictor9@gmail.com`, `+234 816 484 1085`), location (`Lagos, Nigeria — UTC+1 / CET Synchronous`), LinkedIn, GitHub, and portfolio URLs.
-2. **4 Role-Specific Persona Lenses (Covering All 8 Target Roles)**:
-   - **`devops`**: *DevOps Engineer, DevSecOps Engineer, Azure/AWS DevOps Engineer, Platform Engineer, SRE*
-   - **`architect`**: *Cloud Solutions Architect, Cloud Engineer, Multi-Cloud Platform Architect*
-   - **`infra`**: *Cloud Infrastructure Engineer, System Administrator, Linux/Windows Systems Engineer*
-   - **`support`**: *Technical Support Engineer (L3), IT Specialist / Administrator, Cloud Support Engineer*
-3. **Verified Certifications & Zero-Tracker ATS Policy**:
-   - Preserves **Kubernetes and Cloud Native Associate (KCNA)**, **AWS Certified Solutions Architect – Associate**, **AWS Certified Developer – Associate**, **AWS Certified Cloud Practitioner**, **Kubernetes and Cloud Native Essentials (KCNE)**, and **ITIL Foundation (Pursuing)**.
-   - Enforces `no_external_tracker_links` so Credly/utm tracking links never trigger enterprise ATS spam filters.
-4. **Empirical Production KPIs**:
-   - `99.9%` Enterprise Cloud Uptime SLA (Azure & AWS)
-   - `99%` First-Day L3 Issue Resolution via structured RCA (TeKnowledge)
-   - `>60%` AI Prediction Engine Accuracy on Azure OpenAI / AKS pods (GVOC)
-   - `<15 Min` Multi-Environment IaC Provisioning (down from hours via Terraform & ARM/Bicep)
-5. **Complete Employment & Educational Timeline**:
-   - **GVOC** (Dec 2025 – Present, Remote UK)
-   - **TeKnowledge** (Oct 2021 – Nov 2025, Victoria Island, Lagos)
-   - **Access Bank Plc** (Jan 2021 – Sep 2021, Lagos)
-   - **State Ministry of Finance, Budget & National Planning** (Mar 2019 – Mar 2020, Uyo, Akwa Ibom)
-   - **Nigerian Airspace Management Agency (NAMA)** (Jul 2016 – Dec 2016, Ikeja, Lagos)
-   - **University of Nigeria, Nsukka** — B.Sc. in Computer Science (2014 – 2018)
-6. **Typographic & Font Ligature Repair**:
-   - Automatically repairs broken PDF ligatures found in your previous CVs (such as `eƯiciency` → `efficiency` and `eƯective` → `effective`) via `ingestion/text_utils.py`.
-7. **Stepcon Solutions (`RC - 8284984`) Corporate Profile**:
-   - Embeds your Nigerian CAC registration (`RC - 8284984`), B2B Corp-to-Corp (C2C) pitch, service offerings, and multi-currency commercial terms (`USD`, `GBP`, `EUR`, `NGN`).
+Treat this file as the current application context, not independent verification of every profile claim. Review generated documents against your latest CV before applying.
 
-> **How to update your profile in the future**: Whenever you gain a new certification, skill, or role, simply edit [`data/profile-data.json`](data/profile-data.json). Every CLI command, CV/cover letter generator, scorer, and daily email digest reads directly from [`data/profile-data.json`](data/profile-data.json).
+The GitHub Pages portfolio at `index.html` reads this same file directly. It does not keep an embedded profile or a second root-level JSON copy. Update only `data/profile-data.json` when you confirm a candidate fact; generated opportunity documents remain separate and editable. Certification issue and expiration dates are stored with each credential and carried into generated CVs.
+
+Generated application documents are tailored from the profile and job description; the job description is not treated as evidence of candidate qualifications. The generators do not add fallback achievements, education, certifications, projects, contact details, or skills when those fields are absent. They preserve profile facts while prioritizing details relevant to each opportunity.
+
+The repository profile is application input, not independent verification. The supplied CV could not be text-extracted during this implementation, so its contents have not been compared against the profile. Review `data/profile-data.json` against your current CV and update it only when you explicitly confirm a correction or addition. Generated opportunity documents can then be edited independently without modifying the profile.
 
 ---
 
@@ -91,7 +69,7 @@ python cli/main.py stepcon --proposal data/sample_tender.txt --client "EuroFin C
 ```
 
 ### D. Trigger the Daily 8:00 AM Opportunity Digest (`digest`)
-Run the full discovery → Nigeria-remote/visa/B2B filtering → active link verification → CV/letter tailoring → email digest pipeline:
+Run discovery → remote-eligibility or visa-sponsorship filtering → active link verification → CV/letter tailoring → email digest. B2B tenders are evaluated separately by the Stepcon pipeline:
 
 ```powershell
 # Dry-Run mode (generates RFC 5322 .eml email file + tailored attachments in output/)
@@ -100,6 +78,38 @@ python cli/main.py digest --dry-run --force --output-dir output/digests
 # Live SMTP mode (sends directly to aniekwevictor9@gmail.com once .env is configured)
 python cli/main.py digest --live --force
 ```
+
+The zero-cost live career adapters query Remote OK, We Work Remotely RSS, Jobicy, Remotive, and Arbeitnow. The curated company catalog at [`data/company-boards.json`](data/company-boards.json) also queries 9 validated Greenhouse boards and 8 validated Ashby boards on each run; postings are fetched fresh from the public ATS endpoints and balanced across configured employers before ranking. No provider API keys, paid plans, or repository variables are needed for this curated set. Lever remains available as an optional adapter, but no Lever board was seeded because the candidate-aligned boards checked during curation were inactive, unavailable, or had no suitable current roles. The collector gathers results across sources before eligibility checks and scoring; the email contains up to the 20 highest-ranked eligible, new postings, with tailored packages for the top matches. The run output reports per-source counts at discovery, eligibility, verification, scoring, and email selection. This is a broad multi-source search, not a crawler of the entire internet; each provider has different coverage and terms. Live discovery never substitutes synthetic examples when sources return no jobs. A listing must be remote-eligible for the candidate or explicitly offer visa/work-permit sponsorship; incidental mentions of remote activities or relocation benefits alone do not qualify. Region restrictions are checked even when a provider labels a role remote, and internship/co-op titles are excluded from the candidate's configured career targets. Eligibility is a pre-screen, not a guarantee of work authorization or role-specific sponsorship; confirm those details with the employer before applying. A B2B/fellowship label, timezone, or city alone does not establish eligibility.
+
+No accounts or secrets are needed for the built-in public feeds/APIs:
+
+- [Remote OK API](https://remoteok.com/api), [We Work Remotely RSS](https://weworkremotely.com/remote-jobs.rss), [Jobicy public API](https://jobicy.com/api/jobs), [Remotive public API](https://remotive.com/api/remote-jobs), and [Arbeitnow API](https://www.arbeitnow.com/api/job-board-api) are fetched without API credentials. Jobicy's optional direct-ATS API key is not used because it is paid. The daily scheduler makes one Remotive request per run (well below its published maximum of four requests per day). The email includes source attribution and direct listing links; Remotive results are used only in the candidate's private digest, not republished to another job board.
+- Public employer-board endpoints are available for [Greenhouse](https://docs.greenhouse.io/job-board.html), [Lever](https://github.com/Lever/postings-api), and [Ashby](https://developers.ashbyhq.com/docs/public-job-posting-api). The curated Greenhouse/Ashby boards are ready to use without setup. To add more boards, open [repository Actions variables](https://github.com/Nice-Major/Nice-Major/settings/variables/actions) → **New repository variable** and add comma-separated public slugs to `GREENHOUSE_BOARD_TOKENS`, `LEVER_SITE_NAMES`, or `ASHBY_BOARD_NAMES`. For example, `boards.greenhouse.io/<slug>`, `jobs.lever.co/<slug>`, or `jobs.ashbyhq.com/<slug>` provide the slug; for EU Lever, use `eu:<slug>`. These are identifiers, not secrets; no account or API key is required. Extra identifiers are additive, capped at 20 boards per provider per run, checked against their public endpoint, and diversified with the curated catalog. The catalog is reviewed and expanded as suitable companies and boards are verified. No free universal index exposes every employer; public ATS endpoints cannot discover companies that have not published a known board identifier.
+
+The workflow does not use Google Jobs, Adzuna, Jooble, SerpApi, or any other paid/metered search provider. Google documents how employers can publish `JobPosting` structured data for Google Search, not a public job-search API for this workflow. The source set is broad but not an exhaustive crawler of the internet; each provider has its own coverage, terms, and rate limits. The curated company list is maintained as code, while currently published postings are refreshed on each daily search; a public job-board API does not provide a complete directory of other employers to automatically add.
+
+The email includes the PDF CV and cover letter plus matching editable Word (`.docx`) documents. Names follow `First Last Company CV.pdf` and `First Last Company Cover Letter.pdf` (with matching `.docx` filenames). Edit the Word files or the Markdown sources in the downloaded package, then use `rebuild` to produce a new PDF from edited Markdown.
+
+### E. Submit a Manually Found Opportunity
+The GitHub Actions workflow **Instant Job Tailoring & PDF Application Generator** accepts a posting URL or pasted job description, plus optional company and role overrides. It reads the profile from `data/profile-data.json` by default, generates a dedicated application package, and can email it. Locally, use:
+
+```powershell
+python cli/main.py apply --url "https://jobs.example.com/posting"
+python cli/main.py apply --file data/paste_job_here.txt --company "Example Corp"
+python cli/main.py apply --text "Paste the complete job description here" --json
+```
+
+Each package includes editable Markdown sources and matching PDFs. Edit the `.md` files, then rebuild the PDFs with `python cli/main.py rebuild --opportunity <folder>`. The application email includes the PDF and Markdown files; the GitHub Actions artifact includes the generated source documents as well.
+
+### F. Record Candidate Feedback
+Use the **Career Search Feedback** GitHub Actions workflow or record it locally:
+
+```powershell
+python cli/main.py feedback --role "Cloud Engineer" --outcome interested
+python cli/main.py feedback --role "Cloud Engineer" --outcome interview
+```
+
+Only aggregate role/outcome counts are persisted. Three or more explicit `interested` / `not_interested` votes for a role can adjust its ordering by at most five points; this does not change fit scores, eligibility, or candidate-profile facts. Application outcomes inform the self-review but do not automatically rewrite the CV/profile. Review `output/workflow_reviews/` before making profile changes.
 
 ---
 
@@ -123,7 +133,8 @@ Detailed architectural trade-offs (GitHub Actions vs. Windows Task Scheduler vs.
    - `SMTP_USER` (`aniekwevictor9@gmail.com`)
    - `SMTP_PASSWORD` (your 16-character Google App Password)
    - `SMTP_SENDER` (`aniekwevictor9@gmail.com`)
-3. The workflow in [`.github/workflows/daily_dispatch.yml`](.github/workflows/daily_dispatch.yml) automatically executes every morning at `07:00 UTC` (`08:00 AM WAT`) and can also be triggered manually via the **Actions** tab.
+3. The workflow in [`.github/workflows/daily_dispatch.yml`](.github/workflows/daily_dispatch.yml) is scheduled for `07:00 UTC` (`08:00 AM WAT`) and can also be triggered manually via the **Actions** tab. GitHub scheduled runs are best-effort and may be delayed.
+4. Opportunity history and aggregate feedback are restored/saved through the GitHub Actions cache. The history contains only hashes, not posting text, URLs, profile data, or generated documents. On the first upgraded run there is no prior cache, so previously emailed jobs may appear once while the history is initialized.
 
 ---
 

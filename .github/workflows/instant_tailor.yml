@@ -96,8 +96,11 @@ jobs:
         with:
           name: tailored-pdf-application-${{ github.run_id }}
           path: |
-            output/instant_application/*.pdf
-            output/instant_application/*.md
+            output/instant_application/**/*.pdf
+            output/instant_application/**/*.docx
+            output/instant_application/**/*.md
+            output/instant_application/**/*.html
+            output/instant_application/**/*.txt
             output/instant_application/*.eml
           retention-days: 30
           if-no-files-found: ignore

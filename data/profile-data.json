@@ -6,20 +6,20 @@
     "fullName": "John Victor Aniekwe",
     "email": "aniekwevictor9@gmail.com",
     "phone": "+2348130004114",
-    "location": "Lagos, Nigeria (UTC+1 / CET Synchronous)",
+    "location": "Lagos State, Nigeria (WAT, UTC+1)",
     "linkedin": "https://www.linkedin.com/in/victor-aniekwe",
     "githubProfile": "https://github.com/Nice-Major",
     "portfolioUrl": "https://nice-major.github.io/Nice-Major/",
-    "timeZone": "UTC+1 / CET Synchronous",
+    "timeZone": "West Africa Time (UTC+1)",
     "mobilityCategories": [
-      "Global Remote from Anywhere (Nigeria / UTC+1 / CET / EMEA Synchronous)",
-      "Visa-Sponsored Relocation (Canada GTS/LMIA, UK Skilled Worker, EU Blue Card, Spain 20-Day UGE-CE HQP / Digital Nomad Visa)",
-      "B2B Corp-to-Corp Contractor via Stepcon Solutions (Nigerian CAC: RC - 8284984)"
+      "Fully remote roles open to applicants based in Nigeria",
+      "Relocation opportunities with employer-sponsored work authorization",
+      "B2B consulting engagements through Stepcon Solutions"
     ],
     "education": {
       "degree": "Bachelor of Science (B.Sc.) in Computer Science",
       "institution": "University of Nigeria, Nsukka",
-      "period": "2014 – 2018",
+      "period": "January 2014 – July 2018",
       "major": "Computer Science"
     },
     "languages": [
@@ -30,7 +30,9 @@
         "name": "Kubernetes and Cloud Native Associate (KCNA)",
         "issuer": "The Linux Foundation / CNCF",
         "status": "Active",
-        "year": "Active",
+        "issueDate": "September 2025",
+        "expirationDate": "September 2027",
+        "year": "2025",
         "verified": true,
         "credlyTrackerLinkPolicy": "no_external_tracker_links",
         "tags": [
@@ -45,7 +47,9 @@
         "name": "AWS Certified Solutions Architect – Associate",
         "issuer": "Amazon Web Services",
         "status": "Active",
-        "year": "Active",
+        "issueDate": "July 2024",
+        "expirationDate": "July 2027",
+        "year": "2024",
         "verified": true,
         "credlyTrackerLinkPolicy": "no_external_tracker_links",
         "tags": [
@@ -60,7 +64,9 @@
         "name": "AWS Certified Developer – Associate",
         "issuer": "Amazon Web Services",
         "status": "Active",
-        "year": "Active",
+        "issueDate": "August 2024",
+        "expirationDate": "August 2027",
+        "year": "2024",
         "verified": true,
         "credlyTrackerLinkPolicy": "no_external_tracker_links",
         "tags": [
@@ -73,8 +79,10 @@
       {
         "name": "AWS Certified Cloud Practitioner",
         "issuer": "Amazon Web Services",
-        "status": "Active",
-        "year": "Active",
+        "status": "Expired",
+        "issueDate": "July 2022",
+        "expirationDate": "July 2025",
+        "year": "2022",
         "verified": true,
         "credlyTrackerLinkPolicy": "no_external_tracker_links",
         "tags": [
@@ -88,8 +96,9 @@
       {
         "name": "Kubernetes and Cloud Native Essentials (KCNE)",
         "issuer": "The Linux Foundation / CNCF",
-        "status": "Active",
-        "year": "Active",
+        "status": "Completed training",
+        "issueDate": "June 2025",
+        "year": "2025",
         "verified": true,
         "credlyTrackerLinkPolicy": "no_external_tracker_links",
         "tags": [
@@ -119,28 +128,28 @@
   },
   "kpiMetrics": [
     {
-      "metric": "Enterprise Cloud Uptime SLA",
+      "metric": "Enterprise Azure uptime",
       "value": "99.9%",
-      "label": "Enterprise Cloud Uptime SLA",
-      "context": "Sustained across enterprise Microsoft Azure & AWS compute, storage, and networking estates."
+      "label": "Enterprise Azure uptime",
+      "context": "maintained for enterprise customers."
     },
     {
-      "metric": "First-Day L3 Issue Resolution",
+      "metric": "Azure App Service L3 incident first-day resolution rate",
       "value": "99%",
-      "label": "First-Day L3 Issue Resolution",
-      "context": "First-day resolution rate for Azure App Service (Linux/OSS & Windows) through structured RCA."
+      "label": "Azure App Service L3 first-day resolution rate",
+      "context": "achieved through structured root-cause analysis on Linux/OSS and Windows cases."
     },
     {
-      "metric": "AI Prediction Engine Accuracy",
+      "metric": "Growth Intelligence AI prediction success rate",
       "value": ">60%",
-      "label": "AI Prediction Engine Accuracy",
-      "context": "Maintained on microservices deployed on Azure OpenAI and AKS pods/nodes."
+      "label": "Growth Intelligence AI prediction success rate",
+      "context": "reported for the platform built with Azure OpenAI and AKS."
     },
     {
-      "metric": "IaC Provisioning Reduction",
-      "value": "<15 Min",
-      "label": "IaC Provisioning (Down from Hours)",
-      "context": "Reduced multi-environment provisioning and deployment time from hours using Terraform and ARM/Bicep."
+      "metric": "Multi-environment infrastructure provisioning and deployment time",
+      "value": "Under 15 minutes",
+      "label": "Multi-environment provisioning time",
+      "context": "reduced from hours using Terraform and ARM/Bicep."
     }
   ],
   "roleCategories": {
@@ -153,8 +162,8 @@
         "Platform Engineer",
         "Site Reliability Engineer (SRE)"
       ],
-      "headline": "Senior DevOps & AI Platform Engineer | AWS, Azure, Kubernetes (KCNA) & CI/CD Automation",
-      "summary": "Delivery-oriented DevOps and AI Platform Engineer with 5+ years of production experience architecting, automating, and securing high-availability Linux and hybrid cloud environments across AWS and Microsoft Azure. Proven expertise in container orchestration (Docker, Podman, Kubernetes/AKS/EKS), declarative Infrastructure as Code (Terraform, ARM/Bicep), advanced Bash/Python/PowerShell scripting, and AI-augmented operations—deploying Azure OpenAI microservices on Kubernetes pods/nodes (>60% prediction accuracy) and leveraging GitHub Copilot Enterprise across CI/CD, networking, and observability. Track record of sustaining 99.9% platform uptime, 99% first-day L3 incident resolution, and reducing environment provisioning from hours to minutes."
+      "headline": "DevOps Engineer & Cloud Architect | AWS, Azure, Kubernetes, CI/CD & Infrastructure as Code",
+      "summary": "DevOps and AI Platform Engineer with 5+ years of experience building and operating cloud environments across AWS and Microsoft Azure. Focus areas include Kubernetes and container platforms, Terraform and ARM/Bicep infrastructure as code, CI/CD, Linux systems, automation, and cloud operations. Recent work includes supporting a Growth Intelligence platform with an AI prediction success rate above 60%. Reported outcomes include 99.9% enterprise Azure uptime, a 99% first-day L3 resolution rate, and reducing multi-environment provisioning from hours to under 15 minutes."
     },
     "architect": {
       "categoryTitle": "Cloud Solutions Architect & Cloud Engineer",
@@ -186,8 +195,8 @@
         "IT Specialist / Administrator",
         "Application Support Engineer"
       ],
-      "headline": "Senior Technical Cloud Support Engineer (L3) & Enterprise IT Infrastructure Specialist",
-      "summary": "Customer-obsessed L3 Cloud Application Support Engineer and IT Infrastructure Specialist with 5+ years of experience diagnosing and resolving complex production escalations across Microsoft Azure, AWS, Linux/Ubuntu, Windows Server, and containerized runtimes. Achieved a verified 99% first-day issue resolution rate and 99.9% infrastructure uptime SLA by integrating Microsoft Copilot within DfM (Design for Manufacturability / Incident Management) backed by Troubleshooting Guides (TsG) and engineering wikis, combined with deep log, metric, and trace root-cause analysis (RCA)."
+      "headline": "Technical Cloud Support Engineer (L3) & Enterprise IT Infrastructure Specialist",
+      "summary": "Customer-focused L3 Cloud Application Support Engineer and IT Infrastructure Specialist with 5+ years of experience diagnosing and resolving production issues across Microsoft Azure, AWS, Linux/Ubuntu, Windows Server, and containerized environments. Reported outcomes include a 99% first-day L3 resolution rate and 99.9% uptime for enterprise Azure customers. Experienced in incident workflows, troubleshooting guides, engineering knowledge bases, and root-cause analysis using logs, metrics, and traces."
     }
   },
   "skillsMatrix": [
@@ -198,7 +207,7 @@
         "Azure AI Foundry & Databricks Platform Integration",
         "GitHub Copilot Enterprise (CI/CD, IaC, Architecture & RCA)",
         "Microsoft Copilot in DfM (TsG & Wiki Knowledge Base Integration)",
-        "AI Prediction & Storytelling Engine Infrastructure (>60% Accuracy)",
+        "AI Prediction Platform Infrastructure (>60% Prediction Success Rate)",
         "AI-Driven ClickUp REST API Workflow & Board Automation"
       ],
       "tags": [
@@ -274,7 +283,7 @@
       "items": [
         "Observability Frameworks (Logs, Metrics, Distributed Traces)",
         "AWS CloudWatch, Azure Monitor, Application Insights, Prometheus/Grafana/Loki-Compatible Telemetry",
-        "SLI / SLO / SLA Compliance (99.9% Uptime, 99% First-Day Resolution)",
+        "SLI / SLO / SLA Compliance (99.9% Uptime, 99% First-Day L3 Resolution)",
         "Cisco CyberOps Security Operations (SIEM Log Correlation, SOC Alert Triage, NIST SP 800-61 Incident Response, MITRE ATT&CK & Cyber Kill Chain Mapping)",
         "Network Intrusion & Packet Analysis (IDS/IPS, Wireshark, tcpdump, NetFlow) & Host-Based Forensics / EDR Telemetry",
         "IAM Access Controls, Zero-Trust & Defense-in-Depth Architecture, Azure Key Vault Secret/Certificate Management, CVSS Vulnerability Checks, Disaster Recovery & Backup Restoration",
@@ -291,8 +300,8 @@
   "experience": [
     {
       "company": "GVOC",
-      "location": "Remote, United Kingdom (UTC+0 / CET Synchronous)",
-      "period": "December 2025 – Present",
+      "location": "Full-time remote (UK-based startup; based in Lagos, Nigeria)",
+      "period": "December 8, 2025 – Present",
       "titles": {
         "devops": "DevOps Engineer / Platform Architect",
         "architect": "Cloud Solutions & Platform Architect",
@@ -356,18 +365,18 @@
       ]
     },
     {
-      "company": "TEKNOWLEDGE",
-      "location": "Victoria Island, Lagos, Nigeria",
-      "period": "October 2021 – November 2025",
+      "company": "TeKnowledge",
+      "location": "Full-time hybrid, Lagos State, Nigeria",
+      "period": "October 2021 – July 31, 2026",
       "titles": {
-        "devops": "Cloud DevOps & Application Platform Engineer (Azure App Service L3)",
-        "architect": "Cloud Infrastructure & Application Platform Specialist (L3)",
-        "infra": "Cloud Infrastructure & Systems Escalation Engineer (L3)",
-        "support": "Technical Cloud Application Support Engineer – Azure App Service (Dev & OSS) L3"
+        "devops": "Cloud Engineer, Azure App Service (Dev & OSS)",
+        "architect": "Cloud Engineer, Azure App Service (Dev & OSS)",
+        "infra": "Cloud Engineer, Azure App Service (Dev & OSS)",
+        "support": "Cloud Engineer, Azure App Service (Dev & OSS)"
       },
       "bullets": [
         {
-          "text": "Designed, managed, and supported enterprise cloud infrastructure across Compute, Storage, Security, and Hybrid Networking (VNets, VPNs, NSGs) for Microsoft Azure customers, sustaining a verified 99.9% platform uptime SLA.",
+          "text": "Designed and managed cloud infrastructure for enterprise Azure customers, sustaining 99.9% uptime against the platform SLA.",
           "tags": [
             "support",
             "infra",
@@ -376,7 +385,7 @@
           ]
         },
         {
-          "text": "Served as the L3 escalation lead for complex Linux/OSS, container, networking, and application code/configuration incidents, achieving a 99% first-day issue resolution rate through structured root-cause analysis (RCA).",
+          "text": "Resolved 99% of L3 incidents on the first day through structured root-cause analysis across Linux/OSS, containers, networking, and application configuration.",
           "tags": [
             "support",
             "infra",
@@ -393,7 +402,7 @@
           ]
         },
         {
-          "text": "Architected automated CI/CD deployment pipelines and reusable IaC templates plus Bash, Python, and PowerShell scripts, reducing multi-environment provisioning and deployment time from hours to minutes (<15 minutes).",
+          "text": "Built CI/CD pipelines, reusable infrastructure-as-code templates, and Bash, Python, and PowerShell automation, reducing multi-environment provisioning and deployment from hours to under 15 minutes.",
           "tags": [
             "devops",
             "architect",
@@ -413,7 +422,7 @@
       ]
     },
     {
-      "company": "ACCESS BANK PLC",
+      "company": "Access Bank Plc",
       "location": "Lagos State, Nigeria",
       "period": "January 2021 – September 2021",
       "titles": {
@@ -435,7 +444,7 @@
       ]
     },
     {
-      "company": "STATE MINISTRY OF FINANCE, BUDGET & NATIONAL PLANNING",
+      "company": "State Ministry of Finance, Budget & National Planning",
       "location": "Uyo, Akwa Ibom State, Nigeria",
       "period": "March 2019 – March 2020",
       "titles": {
@@ -455,7 +464,7 @@
       ]
     },
     {
-      "company": "NIGERIAN AIRSPACE MANAGEMENT AGENCY (NAMA)",
+      "company": "Nigerian Airspace Management Agency (NAMA)",
       "location": "Ikeja, Lagos State, Nigeria",
       "period": "July 2016 – December 2016",
       "titles": {
@@ -479,7 +488,7 @@
     "companyName": "Stepcon Solutions",
     "cacNumber": "RC - 8284984",
     "jurisdiction": "Corporate Affairs Commission (CAC), Federal Republic of Nigeria",
-    "b2bConsultancyPitch": "Stepcon Solutions (RC - 8284984) provides immediate Corp-to-Corp (C2C) Cloud Architecture, DevSecOps, AI Platform Engineering, and L3 Escalation Support pods in synchronous CET/UK/EMEA business hours—eliminating international payroll tax friction, Employer-of-Record (EOR) markups, and visa lead times.",
+    "b2bConsultancyPitch": "Stepcon Solutions offers B2B consulting in cloud architecture, DevSecOps, AI platform engineering, and L3 infrastructure and application support, with availability for UK and EMEA business-hour coordination.",
     "hardwareDivision": "Enterprise & Custom Computing Hardware Division: Procurement, QA diagnostics, WhatsApp-to-Inventory catalog automation, and corporate fulfillment for Consumer, Business, High-Performance, and Custom-Built Laptops and Desktops.",
     "serviceOfferings": [
       "Cloud Solutions Architecture (AWS & Microsoft Azure)",
@@ -488,6 +497,6 @@
       "L3 Infrastructure & Application Escalation Support",
       "Enterprise & Custom Computing Hardware Commerce"
     ],
-    "synchronousHours": "UTC+1 / CET / UK / EMEA Synchronous"
+    "synchronousHours": "Availability by agreement for UK and EMEA business-hour coordination"
   }
 }

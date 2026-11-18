@@ -5,8 +5,8 @@ Feature: F09 (Geo-Eligibility & Sponsorship Filter)
 Milestone: M3 (Opportunity Discovery, Geo-Filtering & Verification)
 
 Filters opportunities for remote eligibility from Nigeria (Worldwide, EMEA, CET, UTC+1),
-visa/relocation sponsorship, and contract/consultancy types, while enforcing strict hard
-rejection of US-only, W2-only, security clearance, and payroll-tax locked roles.
+visa sponsorship, and contract/consultancy types, while enforcing strict hard rejection of
+internships, US-only, W2-only, security clearance, and payroll-tax locked roles.
 """
 
 from __future__ import annotations
@@ -124,12 +124,22 @@ HARD_DISQUALIFIERS: List[str] = [
     r"\bon-?site\s+in\s+[a-z\s]+\s+office\s+mandatory\b",
 ]
 
+_HARD_DISQUALIFIER_CUE_PATTERN = re.compile(
+    r"\b(?:citizens?|residents?|reside|residency|u\.?s\.?|usa|united states|canada|"
+    r"green card|payroll|tax|california|clearance|polygraph|top secret|w-?2|c2c|"
+    r"corp-to-corp|1099|third part(?:y|ies)|on[\s-]?site|in-person|mandatory|hybrid)\b",
+    flags=re.IGNORECASE,
+)
+_REMOTE_NEGATION_CUE_PATTERN = re.compile(
+    r"\b(?:no|not|non|cannot|can'?t|can not|will not|won'?t|does not|doesn'?t|"
+    r"do not|don'?t|unable to|prohibited|forbidden|disallowed|unavailable|strictly)\b"
+    r".{0,48}\bremote\b|\bremote\b.{0,48}\b(?:not|prohibited|forbidden|disallowed|unavailable)\b",
+    flags=re.IGNORECASE,
+)
+
 REMOTE_WORLDWIDE_PATTERNS: List[str] = [
-    r"\bworldwide\b",
     r"\bwork from anywhere\b",
-    r"\banywhere\b",
     r"\bglobal remote\b",
-    r"\bglobal\b",
     r"\bwfa\b",
     r"\b100%\s*remote\b",
     r"\bfully remote\b",
@@ -168,38 +178,36 @@ REMOTE_REGIONAL_PATTERNS: List[str] = [
     r"\b(?:within|across|in)\s+africa\s+(?:remote|remotely)\b",
     r"\bremote\s+(?:within|across|in)?\s*africa\b",
 
-    # Local Candidate Market (Nigeria / Lagos)
-    r"\bnigeria\b",
-    r"\blagos\b",
 ]
 
 REMOTE_TIMEZONE_PATTERNS: List[str] = [
     r"\bremote\s*[-–—,/]?\s*cet\b",
     r"\bcet\s*[-–—,/]?\s*remote\b",
-    r"\bcet\s+synchronous\b",
-    r"\b(?:synchronous|aligned|overlap)\s+(?:with\s+)?cet\b",
-    r"\bcet\s+timezone\b",
-    r"\bcet\s+(?:business\s+)?hours\b",
     r"\bcet\s*\(?remote\)?\b",
-    r"\b(?:remote\s*[-–—,/]?\s*)?utc\s*[\+\-]\s*1\b",
-    r"\b(?:remote\s*[-–—,/]?\s*)?utc\s*[\+\-]\s*0\b",
-    r"\b(?:remote\s*[-–—,/]?\s*)?gmt\s*[\+\-]\s*1\b",
-    r"\b(?:remote\s*[-–—,/]?\s*)?gmt\s*[\+\-]\s*0\b",
-    r"\baligned\s+with\s+utc\s*[\+\-]\s*1\b",
-    r"\baligned\s+with\s+utc\s*[\+\-]\s*0\s*/\s*gmt\b",
-    r"\buk\s+synchronous\b",
-    r"\buk\s+timezone\b",
 ]
 
 REMOTE_WORK_STYLE_PATTERNS: List[str] = [
     r"\basynchronous remote\b",
-    r"\basynchronous\b",
     r"\basync remote\b",
-    r"\basync\b",
 ]
 
 GENERIC_REMOTE_PATTERNS: List[str] = [
     r"\bremote\b",
+]
+
+EXPLICIT_REMOTE_WORK_PATTERNS: List[str] = [
+    r"\bremote\s+(?:role|position|job|opportunity|employment)\b",
+    r"\b(?:role|position|job|opportunity|employment)\s+(?:is|will be|remains)\s+(?:fully\s+)?remote\b",
+    r"\bremote[- ]first\b",
+]
+
+INCOMPATIBLE_REMOTE_REGION_PATTERNS: List[str] = [
+    r"\bremote\s*[-–—,/:|()]?\s*(?:amer|americas|north america|apac|asia(?:[- ]?pacific)?|japan|australia|australasia)\b",
+    r"\b(?:amer|americas|north america|apac|asia(?:[- ]?pacific)?|japan|australia|australasia)\b[\s)/-]{0,8}\bremote\b",
+    r"\b(?:u\.?s\.?(?:a\.)?|usa|united states|canada)\b[\s(/-]{0,8}\bremote\b",
+    r"\bremote\s+(?:eligible|available|applicants?|candidates?|workers?|employees?)\s+in\s+(?:the\s+)?(?:u\.?s\.?(?:a\.)?|usa|united states|canada)\b",
+    r"\bremote\s+(?:eligible|available)\s+in\s+(?!worldwide\b|anywhere\b|global(?:ly)?\b|nigeria\b|africa\b|emea\b|europe\b|cet\b)([a-z][a-z -]*)",
+    r"\bremote\s*[-–—,/:|]\s*(?!worldwide\b|anywhere\b|global(?:ly)?\b|nigeria\b|africa\b|emea\b|europe\b|cet\b)([a-z][a-z -]*)",
 ]
 
 NO_SPONSORSHIP_PATTERNS: List[str] = [
@@ -246,18 +254,11 @@ VISA_SPONSORSHIP_PATTERNS: List[str] = [
     r"\bh-?1b transfer\b",
     r"\bvisa support\b",
 
-    # 2. Relocation perks & packages
-    r"\brelocation assistance\b",
-    r"\brelocation package\b",
-    r"\brelocation support\b",
-    r"\bfull relocation\b",
-    r"\brelocation provided\b",
-
-    # 3. Availability declarations
+    # 2. Availability declarations
     r"\bsponsorship available\b",
     r"\bsponsorship provided\b",
 
-    # 4. Verb phrases: future, present, and active declarations
+    # 3. Verb phrases: future, present, and active declarations
     r"\bwill sponsor\b",
     r"\b(?:we\s+|company\s+|employer\s+|client\s+|our\s+company\s+|the\s+company\s+)?sponsors?\s+(?:work\s+|employment\s+)?visas?\b",
     r"\b(?:we\s+|company\s+|employer\s+|client\s+)?sponsors?\s+(?:international\s+|foreign\s+)?(?:candidates?|applicants?)(?:\s+for\s+(?:employment\s+|work\s+)?visas?)?\b",
@@ -427,6 +428,9 @@ def has_disqualifiers(text: Any) -> bool:
     if not norm_text.strip():
         return False
 
+    if not _HARD_DISQUALIFIER_CUE_PATTERN.search(norm_text) and not _REMOTE_NEGATION_CUE_PATTERN.search(norm_text):
+        return False
+
     for pattern in HARD_DISQUALIFIERS:
         if re.search(pattern, norm_text):
             return True
@@ -441,7 +445,7 @@ def is_remote_eligible(location_or_text: Any) -> bool:
     Strict Rules:
     1. Checks hard disqualifiers FIRST. If any match -> False immediately.
     2. Empty or pure whitespace -> False.
-    3. Checks positive signals (Worldwide, EMEA, CET, UTC+1, Africa, generic Remote).
+    3. Requires a remote-work signal; location or timezone text alone is insufficient.
     """
     if location_or_text is None:
         return False
@@ -469,19 +473,51 @@ def is_remote_eligible(location_or_text: Any) -> bool:
     return False
 
 
+def has_incompatible_remote_region(text: Any) -> bool:
+    """Detects explicit remote-region limits that exclude the candidate's region."""
+    if text is None:
+        return False
+    norm_text = str(text).lower()
+    return any(re.search(pattern, norm_text) for pattern in INCOMPATIBLE_REMOTE_REGION_PATTERNS)
+
+
+def has_explicit_remote_work_signal(text: Any) -> bool:
+    """Require clear remote-work wording in descriptions, not incidental mentions."""
+    if text is None:
+        return False
+    norm_text = str(text).lower()
+    if not norm_text.strip():
+        return False
+    remote_pattern_groups = (
+        REMOTE_WORLDWIDE_PATTERNS,
+        REMOTE_REGIONAL_PATTERNS,
+        REMOTE_TIMEZONE_PATTERNS,
+        REMOTE_WORK_STYLE_PATTERNS,
+        EXPLICIT_REMOTE_WORK_PATTERNS,
+    )
+    return any(
+        re.search(pattern, norm_text)
+        for group in remote_pattern_groups
+        for pattern in group
+    )
+
+
 def detect_visa_sponsorship(text: Any) -> bool:
     """
-    Detects whether the text offers visa sponsorship or relocation assistance.
+    Detects explicit visa or work-permit sponsorship.
 
     Strict Rules:
     1. Checks explicit negation patterns FIRST ("no visa sponsorship will be provided").
        If negation found -> False immediately.
-    2. Checks positive sponsorship/relocation patterns.
+    2. Relocation benefits alone do not prove immigration sponsorship.
+    3. Checks positive sponsorship patterns.
     """
     if text is None:
         return False
     norm_text = str(text).lower()
     if not norm_text.strip():
+        return False
+    if not any(term in norm_text for term in ("visa", "sponsor", "work permit", "immigration", "h-1b", "h1b", "skilled worker")):
         return False
 
     # 1. Explicit Negation Check FIRST!
@@ -506,6 +542,12 @@ def detect_contract_c2c(text: Any) -> bool:
         return False
     norm_text = str(text).lower()
     if not norm_text.strip():
+        return False
+    if not any(term in norm_text for term in (
+        "contract", "c2c", "b2b", "1099", "corp-to-corp", "freelance",
+        "consultant", "consultancy", "statement of work", "sow", "retainer",
+        "subcontract", "third-party", "third party",
+    )):
         return False
 
     # 1. Check negative restrictions FIRST!
@@ -533,6 +575,11 @@ def detect_research_fellowship(text: Any) -> bool:
     norm_text = str(text).lower()
     if not norm_text.strip():
         return False
+    if not any(term in norm_text for term in (
+        "fellowship", "research", "residency", "postdoc", "postdoctoral",
+        "visiting scholar", "visiting researcher", "academic program", "research grant",
+    )):
+        return False
 
     for pattern in RESEARCH_FELLOWSHIP_PATTERNS:
         if re.search(pattern, norm_text):
@@ -553,7 +600,7 @@ def evaluate_location_mobility(text: Any) -> Tuple[float, str]:
     Contracts:
     - Empty string -> (60.0, "neutral") (Satisfies assert status in ["unspecified", "neutral", "review"])
     - Hard disqualifier -> (0.0, "disqualified")
-    - Remote eligible (Worldwide/EMEA/CET/Nigeria) -> (100.0, "eligible")
+    - Remote eligible (Worldwide/EMEA/CET/remote-from-Nigeria) -> (100.0, "eligible")
     - Visa sponsorship -> (95.0, "visa_sponsorship")
     - Contract C2C -> (90.0, "contract_b2b")
     - Research/Fellowship -> (90.0, "fellowship")
@@ -611,10 +658,12 @@ def evaluate_opportunity_eligibility(
         title = str(job.get("title", ""))
         location = str(job.get("location", ""))
         description = str(job.get("description", ""))
+        raw_remote_flag = job.get("is_remote", job.get("isRemote", False))
     else:
         title = str(getattr(job, "title", ""))
         location = str(getattr(job, "location", ""))
         description = str(getattr(job, "description", ""))
+        raw_remote_flag = getattr(job, "is_remote", False)
 
     combined_text = f"{title} {location} {description}"
 
@@ -624,21 +673,47 @@ def evaluate_opportunity_eligibility(
     if has_disqualifiers(combined_text):
         disqualified = True
         disqualification_reasons.append("Matched hard disqualifier pattern in location or description")
+    if re.search(r"\b(?:intern(?:ship)?|co[\s-]?op)\b", title, flags=re.IGNORECASE):
+        disqualified = True
+        disqualification_reasons.append(
+            "Internship or co-op role is outside the candidate's configured career targets"
+        )
 
     # 2. Positive Pathways Check
-    remote_ok = is_remote_eligible(location) or is_remote_eligible(combined_text)
+    remote_flag = raw_remote_flag is True or (
+        isinstance(raw_remote_flag, str)
+        and raw_remote_flag.strip().casefold() in {"true", "yes", "1"}
+    )
+    remote_location = location
+    if remote_flag and not re.search(r"\bremote\b", remote_location, flags=re.IGNORECASE):
+        remote_location = f"Remote - {remote_location}" if remote_location.strip() else "Remote"
+    remote_context = f"{title} {remote_location} {description}"
+    remote_ok = (
+        not has_incompatible_remote_region(remote_context)
+        and (
+            is_remote_eligible(remote_location)
+            or is_remote_eligible(title)
+            or has_explicit_remote_work_signal(description)
+        )
+    )
     visa_ok = detect_visa_sponsorship(description) or detect_visa_sponsorship(location)
     contract_ok = detect_contract_c2c(combined_text)
     fellowship_ok = detect_research_fellowship(combined_text)
 
-    # Candidate has mobility preferences:
-    # 1. Remote from Nigeria (Worldwide/EMEA/CET)
-    # 2. Visa-Sponsored Relocation (e.g. UK Skilled Worker)
-    # 3. B2B / C2C consultancy
-    # 4. Research / Fellowship
-    is_eligible = not disqualified and (remote_ok or visa_ok or contract_ok or fellowship_ok)
+    # Contract status and fellowship classification are useful metadata, but
+    # neither makes a location eligible without remote work or sponsorship.
+    is_eligible = not disqualified and (remote_ok or visa_ok)
 
-    score, status = evaluate_location_mobility(combined_text if not remote_ok else location)
+    if remote_ok:
+        score, status = evaluate_location_mobility(remote_location)
+    elif visa_ok:
+        score, status = 95.0, "visa_sponsorship"
+    elif contract_ok:
+        score, status = 90.0, "contract_b2b"
+    elif fellowship_ok:
+        score, status = 90.0, "fellowship"
+    else:
+        score, status = 60.0, "neutral"
     if disqualified:
         status = "disqualified"
         score = 0.0

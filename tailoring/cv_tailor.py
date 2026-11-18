@@ -35,48 +35,7 @@ from ingestion.text_utils import (
 
 
 # ============================================================================
-# 1. Canonical Default Projects (Fallback & Supplement)
-# ============================================================================
-
-DEFAULT_PROJECTS = [
-    {
-        "name": "Azure OpenAI & Kubernetes LLM Orchestration Platform",
-        "description": (
-            "Architected and operationalized Azure OpenAI microservices on Azure Kubernetes Service (AKS) "
-            "for real-time prediction and automated storytelling engines; optimized pod auto-scaling, node pools, "
-            "and resource limits to sustain >60% AI prediction accuracy."
-        ),
-        "technologies": ["Azure OpenAI", "AKS", "Kubernetes", "Docker", "Python", "Terraform", "Helm"],
-    },
-    {
-        "name": "Multi-Cloud IaC & GitOps Automation Suite",
-        "description": (
-            "Engineered modular Terraform and ARM/Bicep infrastructure stacks deployed via automated GitHub Actions "
-            "CI/CD pipelines; reduced multi-environment provisioning and deployment times from hours to under 15 minutes."
-        ),
-        "technologies": ["Terraform", "Azure Bicep", "AWS CloudFormation", "GitHub Actions", "CI/CD", "Bash"],
-    },
-    {
-        "name": "Enterprise Azure App Service L3 Diagnostic & RCA Hub",
-        "description": (
-            "Developed Microsoft Copilot-augmented troubleshooting workflows integrated with Troubleshooting Guides (TsG) "
-            "and internal engineering wikis, accelerating incident triage and sustaining a 99% same-day RCA resolution rate."
-        ),
-        "technologies": ["Azure App Service", "Application Insights", "Azure Monitor", "PowerShell", "Python"],
-    },
-    {
-        "name": "ClickUp REST API Automation Microservices",
-        "description": (
-            "Built containerized microservices consuming ClickUp REST APIs for automated ticket lifecycle tracking, "
-            "SLA breach escalation, and cross-team notification dispatch, eliminating manual status overhead."
-        ),
-        "technologies": ["Python", "FastAPI", "Docker", "REST APIs", "Webhooks"],
-    },
-]
-
-
-# ============================================================================
-# 2. Dynamic Skill Prioritization & Matching
+# 1. Dynamic Skill Prioritization & Matching
 # ============================================================================
 
 def _extract_job_keywords(job_text: str) -> Set[str]:
@@ -133,18 +92,18 @@ def prioritize_skills(
     keywords = _extract_job_keywords(job_text)
 
     category_titles = {
-        "cloud_architecture": "Cloud Platforms & Architecture (AWS & Microsoft Azure)",
-        "cloudArchitecture": "Cloud Platforms & Architecture (AWS & Microsoft Azure)",
-        "containerization_kubernetes": "Containers & Kubernetes Orchestration (KCNA)",
-        "containerizationKubernetes": "Containers & Kubernetes Orchestration (KCNA)",
+        "cloud_architecture": "Cloud Platforms & Architecture",
+        "cloudArchitecture": "Cloud Platforms & Architecture",
+        "containerization_kubernetes": "Containers & Kubernetes Orchestration",
+        "containerizationKubernetes": "Containers & Kubernetes Orchestration",
         "iac_automation": "CI/CD & Infrastructure as Code (IaC)",
         "iacAutomation": "CI/CD & Infrastructure as Code (IaC)",
         "dev_sec_ops": "AI-Augmented Platform Engineering & DevSecOps",
         "devSecOps": "AI-Augmented Platform Engineering & DevSecOps",
         "systems_linux_windows": "Systems Administration, OS & Networking",
         "systemsLinuxWindows": "Systems Administration, OS & Networking",
-        "observability_monitoring": "Observability, SRE & Governance (99.9% SLA)",
-        "observabilityMonitoring": "Observability, SRE & Governance (99.9% SLA)",
+        "observability_monitoring": "Observability, SRE & Governance",
+        "observabilityMonitoring": "Observability, SRE & Governance",
     }
 
     scored_categories: List[Tuple[int, str, List[str]]] = []
@@ -200,13 +159,22 @@ def clean_certifications_for_ats(certifications: List[Certification]) -> List[st
         name = cert.name.strip()
         issuer = cert.issuer.strip()
         status = cert.status.strip() or "Active"
+        details = [status]
+        issue_date = cert.issue_date.strip()
+        if issue_date:
+            details.append(f"issued {issue_date}")
+        elif cert.year.strip().lower() not in ("", "active", "in progress"):
+            details.append(f"issued {cert.year.strip()}")
+        if cert.expiration_date.strip():
+            expiry_label = "expired" if status.lower().startswith("expired") else "expires"
+            details.append(f"{expiry_label} {cert.expiration_date.strip()}")
 
         dedup_key = f"{name.lower()}_{issuer.lower()}"
         if dedup_key in seen:
             continue
         seen.add(dedup_key)
 
-        status_suffix = f" ({status})" if status else " (Active, Verified)"
+        status_suffix = f" ({', '.join(details)})"
         if issuer:
             line = f"{name} — {issuer}{status_suffix}"
         else:
@@ -233,8 +201,8 @@ def _generate_markdown_cv(
 ) -> str:
     """Renders candidate CV into single-column ATS-compliant Markdown."""
     cand = profile.candidate
-    full_name = cand.full_name or "John Victor Aniekwe"
-    headline = lens.headline or cand.commitment or "Senior DevOps & Cloud Solutions Engineer"
+    full_name = cand.full_name or "Candidate"
+    headline = lens.headline or cand.commitment or lens.role_key or "Candidate"
 
     # 1. Header Block
     contact_parts = []
@@ -264,10 +232,9 @@ def _generate_markdown_cv(
         " | ".join(contact_parts),
         "",
     ]
-    if not is_domestic_nigeria:
+    if not is_domestic_nigeria and cand.mobility_categories:
         lines.extend([
-            "> **Global Engagement Tracks:** (1) Worldwide / EMEA / CET (UTC+1) Remote from Nigeria • "
-            "(2) Visa-Sponsored Relocation • (3) B2B Corp-to-Corp via **Stepcon Solutions (RC - 8284984)**.",
+            f"> **Mobility:** {'; '.join(cand.mobility_categories)}",
             "",
         ])
     lines.extend([
@@ -276,18 +243,24 @@ def _generate_markdown_cv(
     ])
 
     # 2. Professional Summary
-    summary = lens.summary or (
-        f"Senior Cloud & DevOps Engineer with 5+ years of enterprise experience across AWS and Microsoft Azure. "
-        f"Sustained 99.9% uptime SLAs, achieved 99% first-day L3 RCA resolution, reduced IaC provisioning to <15 min, "
-        f"and architected Kubernetes LLM platforms maintaining >60% AI prediction accuracy."
-    )
-    lines.extend([
-        "## Professional Summary",
-        summary,
-        "",
-        "---",
-        "",
-    ])
+    summary = lens.summary.strip()
+    if summary:
+        lines.extend([
+            "## Professional Summary",
+            summary,
+            "",
+            "---",
+            "",
+        ])
+
+    if profile.kpi_metrics:
+        lines.extend(["## Selected Achievements"])
+        for metric in profile.kpi_metrics:
+            metric_label = metric.metric.strip()
+            context = metric.context.strip()
+            label = f"{metric_label}: {context}" if metric_label and context else metric_label or context
+            lines.append(f"- {metric.value} — {label}" if label else f"- {metric.value}")
+        lines.extend(["", "---", ""])
 
     # 3. Core Competencies
     skills_matrix_dict = profile.skills_matrix.to_dict()
@@ -339,26 +312,26 @@ def _generate_markdown_cv(
     lines.extend(["", "---", ""])
 
     # 6. Key Projects
-    projects = profile.projects if profile.projects else DEFAULT_PROJECTS
-    lines.append("## Key Projects")
-    for proj in projects:
-        p_name = proj.get("name", "")
-        p_desc = proj.get("description", "")
-        p_tech = proj.get("technologies", [])
-        tech_str = f" *(Stack: {', '.join(p_tech)})*" if p_tech else ""
-        lines.append(f"- **{p_name}:** {p_desc}{tech_str}")
-    lines.extend(["", "---", ""])
+    projects = profile.projects
+    if projects:
+        lines.append("## Key Projects")
+        for proj in projects:
+            p_name = proj.get("name", "")
+            p_desc = proj.get("description", "")
+            p_tech = proj.get("technologies", [])
+            tech_str = f" *(Stack: {', '.join(p_tech)})*" if p_tech else ""
+            lines.append(f"- **{p_name}:** {p_desc}{tech_str}")
+        lines.extend(["", "---", ""])
 
     # 7. Education
     edu = profile.education or (profile.candidate.education if profile.candidate else None)
     lines.append("## Education")
     if edu:
-        degree = edu.degree or "Bachelor of Science (B.Sc.) in Computer Science"
-        inst = edu.institution or "University of Nigeria"
-        period = edu.period or "2014 – 2018"
-        lines.append(f"- **{degree}** — {inst} ({period})")
-    else:
-        lines.append("- **Bachelor of Science (B.Sc.) in Computer Science** — University of Nigeria (2014 – 2018)")
+        details = " — ".join(value for value in (edu.degree, edu.institution) if value)
+        if edu.period:
+            details = f"{details} ({edu.period})" if details else edu.period
+        if details:
+            lines.append(f"- {details}")
 
     raw_doc = "\n".join(lines)
     return sanitize_ligatures(raw_doc)
@@ -375,8 +348,8 @@ def _generate_html_cv(
 ) -> str:
     """Renders candidate CV into single-column ATS-compliant clean print HTML."""
     cand = profile.candidate
-    full_name = cand.full_name or "John Victor Aniekwe"
-    headline = lens.headline or cand.commitment or "Senior DevOps & Cloud Solutions Engineer"
+    full_name = cand.full_name or "Candidate"
+    headline = lens.headline or cand.commitment or lens.role_key or "Candidate"
     doc_title = f"{safe_filename(cand.first_name, cand.last_name, lens.role_key or 'DevOps', 'CV', 'html')}"
 
     is_domestic_nigeria = False
@@ -386,12 +359,11 @@ def _generate_html_cv(
             is_domestic_nigeria = True
 
     mobility_note_html = ""
-    if not is_domestic_nigeria:
-        mobility_note_html = """
-      <div class="mobility-note">
-        <strong>Global Engagement Tracks:</strong> (1) Worldwide / EMEA / CET (UTC+1) Remote from Nigeria • 
-        (2) Visa-Sponsored Relocation • (3) B2B Corp-to-Corp via <strong>Stepcon Solutions (RC - 8284984)</strong>.
-      </div>"""
+    if not is_domestic_nigeria and cand.mobility_categories:
+        mobility_note_html = (
+            '<div class="mobility-note"><strong>Mobility:</strong> '
+            f"{html.escape('; '.join(cand.mobility_categories))}</div>"
+        )
 
     # Contact items
     contact_spans = []
@@ -409,11 +381,16 @@ def _generate_html_cv(
         contact_spans.append(f'<a href="{html.escape(cand.portfolio)}">Portfolio</a>')
 
     # Summary
-    summary = lens.summary or (
-        f"Senior Cloud & DevOps Engineer with 5+ years of enterprise experience across AWS and Microsoft Azure. "
-        f"Sustained 99.9% uptime SLAs, achieved 99% first-day L3 RCA resolution, reduced IaC provisioning to <15 min, "
-        f"and architected Kubernetes LLM platforms maintaining >60% AI prediction accuracy."
-    )
+    summary = lens.summary.strip()
+    summary_body = f"<p>{html.escape(summary)}</p>" if summary else ""
+    summary_section = f"<section><h2>Professional Summary</h2>{summary_body}</section>"
+    kpis_li = []
+    for metric in profile.kpi_metrics:
+        metric_label = metric.metric.strip()
+        context = metric.context.strip()
+        label = f"{metric_label}: {context}" if metric_label and context else metric_label or context
+        display = f"{metric.value} — {label}" if label else metric.value
+        kpis_li.append(f"<li>{html.escape(display)}</li>")
 
     # Core Competencies
     skills_matrix_dict = profile.skills_matrix.to_dict()
@@ -464,7 +441,7 @@ def _generate_html_cv(
     certs_li = [f"<li>{html.escape(c)}</li>" for c in cleaned_certs]
 
     # Projects (safe escaping for tags like <Platform>)
-    projects = profile.projects if profile.projects else DEFAULT_PROJECTS
+    projects = profile.projects
     projects_li = []
     for proj in projects:
         p_name = html.escape(proj.get("name", ""))
@@ -472,16 +449,21 @@ def _generate_html_cv(
         p_tech = proj.get("technologies", [])
         tech_str = f" <em>(Stack: {html.escape(', '.join(p_tech))})</em>" if p_tech else ""
         projects_li.append(f"<li><strong>{p_name}:</strong> {p_desc}{tech_str}</li>")
+    projects_section = (
+        f'<section><h2>Key Projects</h2><ul>{"".join(projects_li)}</ul></section>'
+        if projects_li
+        else ""
+    )
 
     # Education
     edu = profile.education or (profile.candidate.education if profile.candidate else None)
     if edu:
-        degree = html.escape(edu.degree or "Bachelor of Science (B.Sc.) in Computer Science")
-        inst = html.escape(edu.institution or "University of Nigeria")
-        period = html.escape(edu.period or "2014 – 2018")
-        edu_html = f"<li><strong>{degree}</strong> — {inst} ({period})</li>"
+        details = " — ".join(value for value in (edu.degree, edu.institution) if value)
+        if edu.period:
+            details = f"{details} ({edu.period})" if details else edu.period
+        edu_html = f"<li>{html.escape(details)}</li>" if details else ""
     else:
-        edu_html = "<li><strong>Bachelor of Science (B.Sc.) in Computer Science</strong> — University of Nigeria (2014 – 2018)</li>"
+        edu_html = ""
 
     html_content = f"""<!DOCTYPE html>
 <html lang="en">
@@ -638,10 +620,9 @@ def _generate_html_cv(
     </header>
 
     <main>
-      <section>
-        <h2>Professional Summary</h2>
-        <p>{html.escape(summary)}</p>
-      </section>
+      {summary_section}
+
+      {f'<section><h2>Selected Achievements</h2><ul>{"".join(kpis_li)}</ul></section>' if kpis_li else ""}
 
       <section>
         <h2>Core Competencies</h2>
@@ -662,12 +643,7 @@ def _generate_html_cv(
         </ul>
       </section>
 
-      <section>
-        <h2>Key Projects</h2>
-        <ul>
-          {"".join(projects_li)}
-        </ul>
-      </section>
+      {projects_section}
 
       <section>
         <h2>Education</h2>
@@ -693,8 +669,8 @@ def _generate_plain_text_cv(
 ) -> str:
     """Renders candidate CV into single-column ATS-compliant plain text."""
     cand = profile.candidate
-    full_name = (cand.full_name or "John Victor Aniekwe").upper()
-    headline = lens.headline or cand.commitment or "Senior DevOps & Cloud Solutions Engineer"
+    full_name = (cand.full_name or "Candidate").upper()
+    headline = lens.headline or cand.commitment or lens.role_key or "Candidate"
 
     is_domestic_nigeria = False
     if job_text:
@@ -708,18 +684,18 @@ def _generate_plain_text_cv(
         f"{cand.location} | {cand.phone} | {cand.email}",
         f"LinkedIn: {cand.linked_in} | GitHub: {cand.github} | Portfolio: {cand.portfolio}",
     ]
-    if not is_domestic_nigeria:
-        lines.append("Global Tracks: Worldwide/EMEA/CET Remote from Nigeria | Visa Relocation | B2B Stepcon Solutions (RC - 8284984)")
+    if not is_domestic_nigeria and cand.mobility_categories:
+        lines.append(f"Mobility: {'; '.join(cand.mobility_categories)}")
+    if lens.summary.strip():
+        lines.extend(["", "=" * 80, "PROFESSIONAL SUMMARY", "=" * 80, lens.summary.strip()])
+    if profile.kpi_metrics:
+        lines.extend(["", "=" * 80,         "SELECTED ACHIEVEMENTS", "=" * 80])
+        for metric in profile.kpi_metrics:
+            metric_label = metric.metric.strip()
+            context = metric.context.strip()
+            label = f"{metric_label}: {context}" if metric_label and context else metric_label or context
+            lines.append(f"- {metric.value} — {label}" if label else f"- {metric.value}")
     lines.extend([
-        "",
-        "=" * 80,
-        "PROFESSIONAL SUMMARY",
-        "=" * 80,
-        lens.summary or (
-            "Senior Cloud & DevOps Engineer with 5+ years of production experience across AWS and Azure. "
-            "Sustained 99.9% uptime SLAs, achieved 99% first-day L3 RCA resolution, reduced IaC provisioning to <15 min, "
-            "and deployed Kubernetes LLMs maintaining >60% AI prediction accuracy."
-        ),
         "",
         "=" * 80,
         "CORE COMPETENCIES",
@@ -771,19 +747,20 @@ def _generate_plain_text_cv(
         lines.append(f"- {c}")
     lines.append("")
 
-    lines.extend([
-        "=" * 80,
-        "KEY PROJECTS",
-        "=" * 80,
-    ])
-    projects = profile.projects if profile.projects else DEFAULT_PROJECTS
-    for proj in projects:
-        p_name = proj.get("name", "")
-        p_desc = proj.get("description", "")
-        p_tech = proj.get("technologies", [])
-        tech_str = f" [Stack: {', '.join(p_tech)}]" if p_tech else ""
-        lines.append(f"- {p_name}: {p_desc}{tech_str}")
-    lines.append("")
+    projects = profile.projects
+    if projects:
+        lines.extend([
+            "=" * 80,
+            "KEY PROJECTS",
+            "=" * 80,
+        ])
+        for proj in projects:
+            p_name = proj.get("name", "")
+            p_desc = proj.get("description", "")
+            p_tech = proj.get("technologies", [])
+            tech_str = f" [Stack: {', '.join(p_tech)}]" if p_tech else ""
+            lines.append(f"- {p_name}: {p_desc}{tech_str}")
+        lines.append("")
 
     lines.extend([
         "=" * 80,
@@ -792,12 +769,11 @@ def _generate_plain_text_cv(
     ])
     edu = profile.education or (profile.candidate.education if profile.candidate else None)
     if edu:
-        degree = edu.degree or "Bachelor of Science (B.Sc.) in Computer Science"
-        inst = edu.institution or "University of Nigeria"
-        period = edu.period or "2014 – 2018"
-        lines.append(f"- {degree} — {inst} ({period})")
-    else:
-        lines.append("- Bachelor of Science (B.Sc.) in Computer Science — University of Nigeria (2014 – 2018)")
+        details = " — ".join(value for value in (edu.degree, edu.institution) if value)
+        if edu.period:
+            details = f"{details} ({edu.period})" if details else edu.period
+        if details:
+            lines.append(f"- {details}")
 
     raw_text = "\n".join(lines)
     return clean_ats_text(raw_text)
@@ -834,11 +810,11 @@ def generate_cv(
     """
     # 1. Normalize Candidate Profile
     if candidate is None:
-        cand_profile = load_profile(allow_fallback=True)
+        cand_profile = load_profile()
     elif isinstance(candidate, dict):
         cand_profile = load_profile_from_dict(candidate)
     elif isinstance(candidate, (str, Path)):
-        cand_profile = load_profile(candidate, allow_fallback=True)
+        cand_profile = load_profile(candidate)
     elif isinstance(candidate, CandidateProfile):
         cand_profile = candidate
     else:

@@ -414,6 +414,62 @@ class TestScoringBoundaryAndAdversarialCases:
         assert result.breakdown["metrics"] >= 80.0
         assert result.breakdown["certs"] >= 80.0
 
+    @pytest.mark.parametrize("title", [
+        "Expansion Lead",
+        "Developer Marketer - Sales",
+        "Finance Analyst",
+        "Executive Assistant",
+        "Freelance Copywriter",
+        "Senior Back-end Developer",
+        "Corporate Security Engineer",
+    ])
+    def test_unrelated_titles_cannot_become_strong_matches_from_cloud_keywords(
+        self, default_candidate_profile, title
+    ):
+        scorer = _get_scorer_module()
+        job_text = (
+            f"{title} | Remote - Worldwide\n\n"
+            "The role references a Cloud Solutions Architect, AWS, Azure, Kubernetes, "
+            "Terraform, 99.9% uptime, and incident response."
+        )
+
+        result = scorer.evaluate_job(default_candidate_profile, job_text)
+
+        assert result.breakdown["title"] == 0.0
+        assert result.overall_score == 0.0
+        assert "does not match" in result.rationale
+
+    @pytest.mark.parametrize("title", [
+        "Senior Cloud Infrastructure Engineer",
+        "AI Platform Engineer",
+        "IT Support Engineer",
+        "Service Desk Engineer",
+        "Cloud Security Engineer",
+    ])
+    def test_target_role_synonyms_match_on_title_only(self, default_candidate_profile, title):
+        scorer = _get_scorer_module()
+        job_text = f"{title} | Remote - Worldwide\n\nBuild and support enterprise services."
+
+        result = scorer.evaluate_job(default_candidate_profile, job_text)
+
+        assert result.breakdown["title"] == 100.0
+        assert result.overall_score > 0.0
+
+    @pytest.mark.parametrize("mobility_text,expected", [
+        ("Relocation assistance and temporary housing are offered.", 60.0),
+        ("UK Skilled Worker visa sponsorship is available.", 95.0),
+    ])
+    def test_mobility_score_uses_explicit_sponsorship_not_relocation_benefits(
+        self, default_candidate_profile, mobility_text, expected
+    ):
+        scorer = _get_scorer_module()
+        result = scorer.evaluate_job(
+            default_candidate_profile,
+            f"Cloud Solutions Architect | London, UK\n\n{mobility_text}",
+        )
+
+        assert result.breakdown["mobility"] == expected
+
     def test_contradictory_unrealistic_experience_demands(self, default_candidate_profile):
         """Verifies resilience to contradictory or absurd requirements."""
         scorer = _get_scorer_module()

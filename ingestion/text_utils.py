@@ -315,6 +315,34 @@ def safe_filename(
     return result
 
 
+def application_filename(
+    candidate: object,
+    company: str,
+    document_type: str,
+    ext: str = "pdf",
+) -> str:
+    """Builds a readable per-opportunity name using the candidate and company."""
+    if isinstance(candidate, dict):
+        details = candidate.get("candidate", candidate)
+        first = details.get("first_name", details.get("firstName", "Candidate"))
+        last = details.get("last_name", details.get("lastName", "Profile"))
+    else:
+        details = getattr(candidate, "candidate", None)
+        first = getattr(details, "first_name", "Candidate")
+        last = getattr(details, "last_name", "Profile")
+
+    def clean_part(value: object, fallback: str) -> str:
+        normalized = re.sub(r"[^A-Za-z0-9]+", " ", str(value or "")).strip()
+        return re.sub(r"\s+", " ", normalized) or fallback
+
+    suffix = clean_part(document_type, "Document")
+    extension = re.sub(r"[^A-Za-z0-9]", "", str(ext or "pdf").lstrip(".")).lower() or "pdf"
+    return (
+        f"{clean_part(first, 'Candidate')} {clean_part(last, 'Profile')} "
+        f"{clean_part(company, 'Hiring Organization')} {suffix}.{extension[:10]}"
+    )
+
+
 # ============================================================================
 # 3. Auxiliary ATS Normalization Utilities
 # ============================================================================

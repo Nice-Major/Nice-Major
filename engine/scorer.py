@@ -44,6 +44,13 @@ DIMENSION_WEIGHTS: Dict[str, float] = {
     "certs": 0.10,     # 10% Certifications & Credentials
 }
 
+_IRRELEVANT_JOB_PATTERN = re.compile(
+    r"\b(?:pastry|chef|baking|baker|culinary|croissant|chocolatier|nurse|nursing|doctor|"
+    r"physician|dentist|veterinarian|lawyer|attorney|paralegal|carpenter|plumber|"
+    r"electrician|realtor|real estate agent|hairdresser|barber)\b",
+    flags=re.IGNORECASE,
+)
+
 
 # ============================================================================
 # 2. Output Data Structure
@@ -97,17 +104,20 @@ class MatchResult:
 
 def _is_irrelevant_job(job_text: str) -> bool:
     """Detects non-technical, culinary, medical, legal, or trade occupations."""
-    text_lower = job_text.lower()
-    irrelevant_markers = [
-        "pastry", "chef", "baking", "baker", "culinary", "croissant", "chocolatier",
-        "nurse", "nursing", "doctor", "physician", "dentist", "veterinarian",
-        "lawyer", "attorney", "paralegal", "carpenter", "plumber", "electrician",
-        "realtor", "real estate agent", "hairdresser", "barber"
-    ]
-    for marker in irrelevant_markers:
-        if re.search(r"\b" + re.escape(marker) + r"\b", text_lower):
-            return True
-    return False
+    return bool(_IRRELEVANT_JOB_PATTERN.search(job_text))
+
+
+def _extract_job_header(job_text: str) -> Tuple[str, str, str]:
+    """Extract the title and optional location prefix used by the daily pipeline."""
+    heading = re.search(r"<h1\b[^>]*>(.*?)</h1\s*>", job_text, flags=re.IGNORECASE | re.DOTALL)
+    if heading:
+        title = clean_html(heading.group(1)).strip()
+        return title, "", clean_html(job_text)
+
+    cleaned = clean_html(job_text) if "<" in job_text else job_text
+    first_line = next((line.strip() for line in cleaned.splitlines() if line.strip()), "")
+    title, separator, location = first_line.partition("|")
+    return title.strip(), location.strip() if separator else "", cleaned
 
 
 def _score_skills(
@@ -220,7 +230,7 @@ def _score_skills(
     return final_score, matched, missing
 
 
-def _score_title(job_text: str, detected_role: str) -> float:
+def _score_title(job_text: str) -> float:
     """Evaluates role title and seniority alignment."""
     if not job_text or not job_text.strip():
         return 0.0
@@ -228,24 +238,16 @@ def _score_title(job_text: str, detected_role: str) -> float:
     if _is_irrelevant_job(job_text):
         return 0.0
 
-    text_lower = job_text.lower()
-    first_lines = "\n".join(text_lower.splitlines()[:5])
+    title_text = _extract_job_header(job_text)[0].lower()
 
-    # Check for exact or alias role matches
+    # Match the posting title only; descriptions often mention unrelated roles.
     for role_entry in ROLE_TAXONOMY.values():
         for alias in role_entry.aliases:
             pattern = r"\b" + re.escape(alias) + r"\b"
-            if re.search(pattern, first_lines):
+            if re.search(pattern, title_text):
                 return 100.0
-            if re.search(pattern, text_lower):
-                return 95.0
 
-    # General technical engineering titles in early lines
-    tech_titles = ["engineer", "architect", "administrator", "specialist", "developer", "lead"]
-    if any(re.search(r"\b" + re.escape(t) + r"\b", first_lines) for t in tech_titles):
-        return 85.0
-
-    return 40.0
+    return 0.0
 
 
 def _score_metrics(job_text: str) -> float:
@@ -289,37 +291,25 @@ def _score_mobility(job_text: str) -> Tuple[float, bool]:
     if _is_irrelevant_job(job_text):
         return 0.0, False
 
-    text_lower = job_text.lower()
+    from discovery.filters import evaluate_opportunity_eligibility
 
-    # 1. Hard disqualifiers (immediate 0.0)
-    disqualifiers = [
-        "us only", "us citizen only", "must be a us citizen", "must reside in the continental us",
-        "must reside in the united states", "w2 only", "active ts/sci", "top secret / sci",
-        "top secret/sci", "secret clearance", "polygraph", "candidates outside the us rejected",
-        "must reside in california for tax purposes",
-    ]
-    for d in disqualifiers:
-        if d in text_lower:
-            return 0.0, True
+    title, location, cleaned = _extract_job_header(job_text)
+    eligibility = evaluate_opportunity_eligibility({
+        "title": title,
+        "location": location,
+        "description": cleaned,
+    })
 
-    # 2. Strong positive indicators (100.0)
-    positive_signals = [
-        "worldwide", "anywhere", "global remote", "work from anywhere", "wfa",
-        "remote - emea", "remote - europe", "remote - cet", "utc+1",
-        "remote - africa", "remote - uk synchronous", "nigeria",
-        "visa sponsorship", "relocation package", "relocation assistance",
-        "b2b", "corp-to-corp", "c2c", "contract", "independent contractor",
-        "remote worldwide", "emea", "cet",
-    ]
-    for p in positive_signals:
-        if p in text_lower:
-            return 100.0, False
-
-    # 3. Generic remote
-    if "remote" in text_lower:
-        return 85.0, False
-
-    # 4. Unstated location (neutral default)
+    if eligibility.disqualified:
+        return 0.0, True
+    if eligibility.remote_eligible_nigeria:
+        return 100.0, False
+    if eligibility.visa_sponsorship:
+        return 95.0, False
+    if eligibility.contract_b2b:
+        return 90.0, False
+    if eligibility.research_fellowship:
+        return 90.0, False
     return 60.0, False
 
 
@@ -413,11 +403,12 @@ def evaluate_job(candidate: Union[CandidateProfile, Dict[str, Any]], job_text: s
         )
 
     # Step 1: Detect target role and extract keywords
-    target_role = detect_target_role(job_text)
+    job_title, _, _ = _extract_job_header(job_text)
+    target_role = detect_target_role(job_title)
     jd_keywords = extract_keywords(job_text)
     # Step 2: Compute individual dimension scores (0–100)
     skills_score, matched_skills, missing_skills = _score_skills(profile, jd_keywords)
-    title_score = _score_title(job_text, target_role)
+    title_score = _score_title(job_text)
     metrics_score = _score_metrics(job_text)
     mobility_score, has_hard_disqualifier = _score_mobility(job_text)
     certs_score = _score_certs(profile, job_text)
@@ -433,6 +424,9 @@ def evaluate_job(candidate: Union[CandidateProfile, Dict[str, Any]], job_text: s
 
     weighted_total = sum(breakdown[dim] * DIMENSION_WEIGHTS[dim] for dim in DIMENSION_WEIGHTS)
 
+    if title_score < 70.0:
+        weighted_total = 0.0
+
     # If job has an explicit disqualification (e.g. US Only, Clearance), cap overall score below 70.0
     if has_hard_disqualifier:
         weighted_total = min(65.0, weighted_total)
@@ -440,7 +434,10 @@ def evaluate_job(candidate: Union[CandidateProfile, Dict[str, Any]], job_text: s
     overall_score = round(min(100.0, max(0.0, weighted_total)), 2)
 
     # Step 4: Formulate action recommendation and rationale string
-    if overall_score >= 80.0:
+    if title_score < 70.0:
+        recommendation = "Do Not Apply"
+        detail = "The posting title does not match the candidate's configured technical role families."
+    elif overall_score >= 80.0:
         recommendation = "Strong Apply"
         detail = "High alignment across core competencies, verified enterprise SLAs, and mobility criteria."
     elif overall_score >= 70.0:

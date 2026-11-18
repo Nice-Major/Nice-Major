@@ -262,6 +262,57 @@ class TestCvTailoringEngine:
         assert "John Victor Aniekwe" in cv_master
         assert len(cv_master) > 500
 
+    def test_cv_omits_empty_projects_section_and_shows_certification_validity(self):
+        cv_mod = _get_cv_tailor_module()
+        profile = CandidateProfile(
+            candidate=CandidateInfo(full_name="Taylor Example", first_name="Taylor", last_name="Example"),
+            certifications=[
+                Certification(
+                    name="Example Cloud Associate",
+                    issuer="Example Issuer",
+                    status="Active",
+                    issueDate="September 2025",
+                    expirationDate="September 2027",
+                )
+            ],
+        )
+
+        for output_format in ("md", "html", "txt"):
+            cv = cv_mod.generate_cv(profile, target_role="Platform Engineer", output_format=output_format)
+            assert "Key Projects" not in cv
+            assert "KEY PROJECTS" not in cv
+            assert "September 2025" in cv
+            assert "September 2027" in cv
+
+    def test_cv_does_not_invent_profile_facts(self):
+        cv_mod = _get_cv_tailor_module()
+        profile = CandidateProfile(candidate=CandidateInfo(
+            full_name="Taylor Example",
+            first_name="Taylor",
+            last_name="Example",
+            email="",
+            phone="",
+            location="",
+            commitment="",
+        ))
+
+        for output_format in ("md", "html", "txt"):
+            cv = cv_mod.generate_cv(
+                profile,
+                "Terraform and Kubernetes experience preferred.",
+                "Platform Engineer",
+                output_format,
+            )
+            for unsupported_fact in (
+                "99.9%",
+                "5+ years",
+                "Terraform",
+                "Kubernetes",
+                "University of Nigeria",
+                "Azure OpenAI & Kubernetes LLM Orchestration Platform",
+            ):
+                assert unsupported_fact not in cv
+
 
 # ============================================================================
 # 2. Feature F06: STAR Cover Letter Tailoring Tests
@@ -335,6 +386,31 @@ class TestCoverLetterTailoringEngine:
         assert "Kubernetes" in letter or "KCNA" in letter
         # Result: Empirical metrics
         assert "99%" in letter or ">60%" in letter or "<15" in letter
+
+    def test_cover_letter_does_not_turn_job_requirements_into_candidate_facts(self):
+        letter_mod = _get_letter_tailor_module()
+        profile = CandidateProfile(candidate=CandidateInfo(
+            full_name="Taylor Example",
+            first_name="Taylor",
+            last_name="Example",
+            email="",
+            phone="",
+            location="",
+            commitment="",
+        ))
+
+        letter = letter_mod.generate_cover_letter(
+            candidate=profile,
+            job_text="The role requires Terraform, Kubernetes, and a 99.9% uptime record.",
+            target_role="Platform Engineer",
+            company_name="Example Co",
+        )
+
+        assert "Taylor Example" in letter
+        assert "Terraform" not in letter
+        assert "Kubernetes" not in letter
+        assert "99.9%" not in letter
+        assert "University of Nigeria" not in letter
 
     def test_cover_letter_includes_verified_degree(self, default_candidate_profile, synthetic_devops_job):
         """Verifies that candidate's B.Sc. in Computer Science from UNN is included."""

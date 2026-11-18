@@ -170,6 +170,10 @@ def store_opportunity_package(
     source_url: str = "",
     location: str = "",
     check_deduplication: bool = True,
+    cv_docx_bytes: bytes = b"",
+    letter_docx_bytes: bytes = b"",
+    cv_docx_filename: str = "",
+    letter_docx_filename: str = "",
 ) -> Dict[str, Any]:
     """
     Saves or links all application materials inside a dedicated opportunity directory.
@@ -212,8 +216,14 @@ def store_opportunity_package(
             # Discover existing CV and Letter PDF files
             pdf_cvs = list(matched_folder.glob("*_CV.pdf"))
             pdf_letters = list(matched_folder.glob("*_Cover_Letter.pdf"))
+            if not pdf_cvs:
+                pdf_cvs = list(matched_folder.glob("* CV.pdf"))
+            if not pdf_letters:
+                pdf_letters = list(matched_folder.glob("* Cover Letter.pdf"))
             cv_path = pdf_cvs[0] if pdf_cvs else None
             letter_path = pdf_letters[0] if pdf_letters else None
+            docx_cvs = list(matched_folder.glob("* CV.docx"))
+            docx_letters = list(matched_folder.glob("* Cover Letter.docx"))
 
             return {
                 "folder_path": matched_folder,
@@ -222,6 +232,8 @@ def store_opportunity_package(
                 "match_reason": match.get("match_reason", "matched"),
                 "cv_pdf_path": cv_path,
                 "letter_pdf_path": letter_path,
+                "cv_docx_path": docx_cvs[0] if docx_cvs else None,
+                "letter_docx_path": docx_letters[0] if docx_letters else None,
                 "all_files": list(matched_folder.glob("*.*")),
             }
 
@@ -256,6 +268,19 @@ def store_opportunity_package(
     cv_pdf_path.write_bytes(cv_pdf_bytes)
     letter_pdf_path.write_bytes(letter_pdf_bytes)
 
+    cv_docx_path = None
+    letter_docx_path = None
+    if cv_docx_bytes:
+        cv_docx_path = opp_dir / (
+            cv_docx_filename or Path(c_pdf_name).with_suffix(".docx").name
+        )
+        cv_docx_path.write_bytes(cv_docx_bytes)
+    if letter_docx_bytes:
+        letter_docx_path = opp_dir / (
+            letter_docx_filename or Path(l_pdf_name).with_suffix(".docx").name
+        )
+        letter_docx_path.write_bytes(letter_docx_bytes)
+
     # 3. Markdown Documents
     cv_md_path = opp_dir / c_pdf_name.replace(".pdf", ".md")
     letter_md_path = opp_dir / l_pdf_name.replace(".pdf", ".md")
@@ -288,6 +313,8 @@ def store_opportunity_package(
         "reused": False,
         "cv_pdf_path": cv_pdf_path,
         "letter_pdf_path": letter_pdf_path,
+        "cv_docx_path": cv_docx_path,
+        "letter_docx_path": letter_docx_path,
         "cv_md_path": cv_md_path,
         "letter_md_path": letter_md_path,
         "jd_path": jd_file,

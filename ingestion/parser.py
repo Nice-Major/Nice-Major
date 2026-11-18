@@ -4,8 +4,8 @@ Module: ingestion.parser
 Feature: F01 (Candidate Profile Data Ingestion)
 
 Authoritative loader converting profile-data.json, arbitrary dicts, or paths into CandidateProfile.
-Implements 5-tier path discovery, camelCase/snake_case normalization, error hierarchy,
-and embedded fallback resilience.
+Loads the canonical repository profile by default, with explicit custom paths and optional
+legacy fallback, plus camelCase/snake_case normalization and validation errors.
 """
 
 from __future__ import annotations
@@ -31,20 +31,11 @@ from ingestion.models import (
 
 logger = logging.getLogger(__name__)
 
-# Search paths for locating profile-data.json
+# The repository profile is the only implicit source of candidate facts.
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
 DEFAULT_SEARCH_PATHS = [
     PROJECT_ROOT / "data" / "profile-data.json",
-    PROJECT_ROOT / "profile-data.json",
-    PROJECT_ROOT / "config" / "profile-data.json",
-    PROJECT_ROOT / "ingestion" / "profile-data.json",
-    Path("data/profile-data.json"),
-    Path("profile-data.json"),
-    Path("config/profile-data.json"),
-    Path("ingestion/profile-data.json"),
-    Path(r"C:\Users\user\Downloads\Nice_Major_Portfolio_and_Automation_Suite\profile-data.json"),
-    Path.home() / "Downloads" / "Nice_Major_Portfolio_and_Automation_Suite" / "profile-data.json",
 ]
 
 
@@ -69,17 +60,13 @@ class ProfileValidationError(ProfileError, ValueError):
 
 
 # ============================================================================
-# 2. Path Discovery Hierarchy (5-Tier)
+# 2. Canonical Profile Path Discovery
 # ============================================================================
 
 def find_profile_data_path(custom_path: Optional[Union[str, Path]] = None) -> Optional[Path]:
     """
-    Locates profile-data.json using the 5-tier search hierarchy:
-    Tier 1: Explicit custom_path (file or directory)
-    Tier 2: Environment variables CAREER_PROFILE_PATH or CANDIDATE_PROFILE_PATH
-    Tier 3: Repository-relative paths (data/, config/, ingestion/)
-    Tier 4: Well-known user system downloads path
-    Tier 5: None (caller uses embedded default profile)
+    Locates the canonical repository profile unless an explicit path or environment
+    override is supplied.
     """
     # Tier 1: Explicit parameter
     if custom_path:
@@ -585,14 +572,14 @@ def load_profile_from_file(
 
 def load_profile(
     source: Optional[Union[str, Path, Dict[str, Any]]] = None,
-    allow_fallback: bool = True,
+    allow_fallback: bool = False,
 ) -> CandidateProfile:
     """
     Universal candidate profile loader.
     Accepts:
     - In-memory dict
     - Path string or Path object (file or directory)
-    - None (auto-discovers profile via 5-tier search hierarchy)
+    - None (loads the canonical repository profile, unless an environment override is set)
     """
     # 1. Direct dictionary
     if isinstance(source, dict):
@@ -614,12 +601,12 @@ def load_profile(
     if found_path and found_path.is_file():
         return load_profile_from_file(found_path, allow_fallback=allow_fallback)
 
-    # 4. Fallback to embedded default
+    # Fallback is opt-in for legacy callers and tests; production paths use the canonical file.
     if allow_fallback:
         logger.info("Using embedded default candidate profile.")
         return load_profile_from_dict(get_embedded_default_profile())
 
-    raise ProfileNotFoundError("Unable to locate profile-data.json across standard search paths.")
+    raise ProfileNotFoundError("Unable to locate the canonical profile at data/profile-data.json.")
 
 
 # Alias for test harness compatibility

@@ -16,6 +16,7 @@ Validates:
 
 from __future__ import annotations
 
+import json
 import sys
 from pathlib import Path
 import pytest
@@ -35,6 +36,14 @@ from discovery.sources import (
     CANONICAL_TARGET_ROLES,
     AdapterRegistry,
     registry,
+    RemotiveAdapter,
+    ArbeitnowAdapter,
+    JobicyAdapter,
+    CompanyBoardAdapter,
+    load_curated_board_entries,
+    COMPANY_BOARD_MAX_RESPONSE_BYTES,
+    JOBICY_MAX_RESPONSE_BYTES,
+    WeWorkRemotelyAdapter,
 )
 from discovery.filters import (
     is_remote_eligible,
@@ -272,7 +281,325 @@ class TestDiscoverySourcesF08:
         sources = reg.list_sources()
         assert "synthetic" in sources
         assert "remoteok" in sources
+        assert {
+            "remotive", "arbeitnow", "greenhouse", "lever", "ashby",
+        } <= set(sources)
         assert reg.get("synthetic") is not None
+
+    def test_jobicy_public_api_uses_current_unmetered_endpoint(self, monkeypatch):
+        adapter = JobicyAdapter()
+        calls = []
+        payload = {
+            "jobs": [{
+                "id": 163048,
+                "jobTitle": "Cloud Infrastructure Engineer",
+                "companyName": "Global Example",
+                "jobGeo": "Worldwide",
+                "jobDescription": "Remote cloud infrastructure role",
+                "url": "https://jobicy.com/jobs/163048-cloud-infrastructure-engineer",
+                "publishedAt": "2026-11-17T08:00:00Z",
+            }]
+        }
+
+        def fake_fetch_url(url, timeout=5, max_bytes=JOBICY_MAX_RESPONSE_BYTES):
+            calls.append(url)
+            return 200, json.dumps(payload).encode("utf-8")
+
+        monkeypatch.setattr(adapter, "fetch_url", fake_fetch_url)
+        jobs = adapter.fetch(query_roles=["Cloud Engineer"], limit=60)
+
+        assert len(jobs) == 1
+        assert jobs[0].source == "jobicy"
+        assert jobs[0].company == "Global Example"
+        assert jobs[0].posted_date == "2026-11-17"
+        assert jobs[0].url == payload["jobs"][0]["url"]
+        assert calls == ["https://jobicy.com/api/jobs?count=60"]
+
+    def test_jobicy_adapter_handles_payload_larger_than_default_limit(self, monkeypatch):
+        adapter = JobicyAdapter()
+        payload = {
+            "jobs": [{
+                "id": 163049,
+                "jobTitle": "Cloud Infrastructure Engineer",
+                "companyName": "Global Example",
+                "jobGeo": "Worldwide",
+                "jobDescription": "x" * (600 * 1024),
+                "url": "https://jobicy.com/jobs/163049-cloud-infrastructure-engineer",
+            }]
+        }
+        response_body = json.dumps(payload).encode("utf-8")
+        requested_limits = []
+
+        def fake_fetch_url(url, timeout=5, max_bytes=512 * 1024):
+            requested_limits.append(max_bytes)
+            return 200, response_body[:max_bytes]
+
+        monkeypatch.setattr(adapter, "fetch_url", fake_fetch_url)
+        jobs = adapter.fetch(query_roles=["Cloud Engineer"])
+
+        assert len(jobs) == 1
+        assert len(jobs[0].description) == 600 * 1024
+        assert requested_limits == [JOBICY_MAX_RESPONSE_BYTES]
+
+    def test_jobicy_geography_is_preserved_as_a_remote_region(self, monkeypatch):
+        adapter = JobicyAdapter()
+        payload = {
+            "jobs": [
+                {
+                    "id": 163050,
+                    "jobTitle": "Cloud Engineer",
+                    "companyName": "Regional Example",
+                    "jobGeo": "Brazil",
+                    "jobDescription": "Remote cloud engineering role",
+                    "url": "https://jobicy.com/jobs/163050",
+                },
+                {
+                    "id": 163051,
+                    "jobTitle": "Cloud Engineer",
+                    "companyName": "Global Example",
+                    "jobGeo": "Worldwide",
+                    "jobDescription": "Remote cloud engineering role",
+                    "url": "https://jobicy.com/jobs/163051",
+                },
+            ]
+        }
+        monkeypatch.setattr(
+            adapter,
+            "fetch_url",
+            lambda url, timeout=5, max_bytes=JOBICY_MAX_RESPONSE_BYTES: (
+                200,
+                json.dumps(payload).encode("utf-8"),
+            ),
+        )
+
+        jobs = adapter.fetch(query_roles=["Cloud Engineer"])
+
+        assert [job.location for job in jobs] == ["Remote - Brazil", "Remote - Worldwide"]
+        assert evaluate_opportunity_eligibility(jobs[0]).is_eligible is False
+        assert evaluate_opportunity_eligibility(jobs[1]).is_eligible is True
+
+    def test_live_limit_is_shared_fairly_across_sources(self, monkeypatch):
+        class FakeAdapter:
+            def __init__(self, source_id, count):
+                self.source_id = source_id
+                self.count = count
+
+            def fetch(self, query_roles=None, limit=20):
+                return [
+                    JobOpportunity(
+                        id=f"{self.source_id}-{index}",
+                        title=f"Cloud Engineer {self.source_id} {index}",
+                        company=f"Company {self.source_id}",
+                        location="Remote - Worldwide",
+                        description="Cloud infrastructure role",
+                        url=f"https://{self.source_id}.example/jobs/{index}",
+                        source=self.source_id,
+                    )
+                    for index in range(self.count)
+                ]
+
+        monkeypatch.setattr(
+            registry,
+            "_adapters",
+            {
+                "first": FakeAdapter("first", 10),
+                "second": FakeAdapter("second", 10),
+            },
+        )
+
+        jobs = fetch_opportunities(
+            sources=["first", "second"],
+            limit=4,
+            offline_mode=False,
+        )
+
+        assert len(jobs) == 4
+        assert [job.source for job in jobs].count("first") == 2
+        assert [job.source for job in jobs].count("second") == 2
+
+    def test_live_discovery_never_substitutes_synthetic_jobs_for_empty_sources(self):
+        jobs = fetch_opportunities(sources=["unconfigured-test-source"], offline_mode=False)
+        assert jobs == []
+
+    def test_remotive_adapter_parses_real_api_shape_and_filters_roles(self, monkeypatch):
+        adapter = RemotiveAdapter()
+        payload = {
+            "jobs": [
+                {
+                    "id": 42,
+                    "title": "Cloud Infrastructure Engineer",
+                    "company_name": "Global Example",
+                    "candidate_required_location": "Worldwide",
+                    "description": "Operate public cloud systems",
+                    "url": "https://remotive.example/jobs/42",
+                    "publication_date": "2026-11-17T08:00:00",
+                    "tags": ["Cloud"],
+                },
+                {
+                    "id": 43,
+                    "title": "Graphic Designer",
+                    "company_name": "Design Example",
+                    "candidate_required_location": "Worldwide",
+                    "description": "Design product illustrations",
+                    "url": "https://remotive.example/jobs/43",
+                },
+            ]
+        }
+        monkeypatch.setattr(
+            adapter,
+            "fetch_url",
+            lambda url, timeout=5: (200, json.dumps(payload).encode("utf-8")),
+        )
+
+        jobs = adapter.fetch(query_roles=["Cloud Infrastructure Engineer"])
+
+        assert len(jobs) == 1
+        assert jobs[0].source == "remotive"
+        assert jobs[0].company == "Global Example"
+
+    def test_greenhouse_adapter_reads_configured_public_board(self, monkeypatch):
+        adapter = CompanyBoardAdapter("greenhouse", "Greenhouse", "GREENHOUSE_BOARD_TOKENS")
+        monkeypatch.setattr("discovery.sources.load_curated_board_entries", lambda source_id: [])
+        payload = {
+            "jobs": [{
+                "id": 42,
+                "title": "Cloud Engineer",
+                "location": {"name": "Remote - Worldwide"},
+                "content": "<p>Cloud role</p>",
+                "absolute_url": "https://boards.greenhouse.io/example/jobs/42",
+            }]
+        }
+        monkeypatch.setenv("GREENHOUSE_BOARD_TOKENS", "example-board")
+        monkeypatch.setattr(
+            adapter,
+            "fetch_url",
+            lambda url, timeout=5, max_bytes=COMPANY_BOARD_MAX_RESPONSE_BYTES: (
+                200,
+                json.dumps(payload).encode("utf-8"),
+            ),
+        )
+
+        jobs = adapter.fetch(query_roles=["Cloud Engineer"])
+
+        assert len(jobs) == 1
+        assert jobs[0].company == "example-board"
+        assert jobs[0].source == "greenhouse"
+
+    def test_curated_company_board_catalog_has_valid_greenhouse_and_ashby_entries(self):
+        greenhouse = load_curated_board_entries("greenhouse")
+        ashby = load_curated_board_entries("ashby")
+        lever = load_curated_board_entries("lever")
+
+        assert len(greenhouse) == 9
+        assert len(ashby) == 8
+        assert lever == []
+        assert all(entry["board"] and entry["company"] for entry in greenhouse + ashby)
+
+    def test_company_board_adapter_balances_results_across_configured_boards(self, monkeypatch):
+        adapter = CompanyBoardAdapter("greenhouse", "Greenhouse", "GREENHOUSE_BOARD_TOKENS")
+        monkeypatch.setattr("discovery.sources.load_curated_board_entries", lambda source_id: [])
+        monkeypatch.setenv("GREENHOUSE_BOARD_TOKENS", "alpha,beta,gamma")
+        requested = []
+
+        def fake_fetch_url(url, timeout=5, max_bytes=COMPANY_BOARD_MAX_RESPONSE_BYTES):
+            requested.append((url, max_bytes))
+            board = url.split("/boards/", 1)[1].split("/", 1)[0]
+            payload = {
+                "jobs": [
+                    {"id": f"{board}-1", "title": "Cloud Engineer"},
+                    {"id": f"{board}-2", "title": "Cloud Engineer"},
+                ]
+            }
+            return 200, json.dumps(payload).encode("utf-8")
+
+        monkeypatch.setattr(adapter, "fetch_url", fake_fetch_url)
+        jobs = adapter.fetch(query_roles=["Cloud Engineer"], limit=5)
+
+        assert [job.company for job in jobs] == ["alpha", "beta", "gamma", "alpha", "beta"]
+        assert len(requested) == 3
+        assert all(max_bytes == COMPANY_BOARD_MAX_RESPONSE_BYTES for _, max_bytes in requested)
+
+    def test_lever_eu_board_maps_public_postings_without_credentials(self, monkeypatch):
+        adapter = CompanyBoardAdapter("lever", "Lever", "LEVER_SITE_NAMES")
+        monkeypatch.setattr("discovery.sources.load_curated_board_entries", lambda source_id: [])
+        payload = [{
+            "id": "posting-42",
+            "text": "DevOps Engineer",
+            "categories": {"location": "Remote - Worldwide"},
+            "descriptionPlain": "Build cloud infrastructure and CI/CD systems.",
+            "hostedUrl": "https://jobs.eu.lever.co/example/posting-42",
+            "workplaceType": "remote",
+            "createdAt": "2026-11-17T08:00:00.000Z",
+        }]
+        requested_urls = []
+        monkeypatch.setenv("LEVER_SITE_NAMES", "eu:example")
+
+        def fake_fetch_url(url, timeout=5, max_bytes=COMPANY_BOARD_MAX_RESPONSE_BYTES):
+            requested_urls.append(url)
+            return 200, json.dumps(payload).encode("utf-8")
+
+        monkeypatch.setattr(adapter, "fetch_url", fake_fetch_url)
+        jobs = adapter.fetch(query_roles=["DevOps Engineer"])
+
+        assert len(jobs) == 1
+        assert jobs[0].title == "DevOps Engineer"
+        assert jobs[0].description == payload[0]["descriptionPlain"]
+        assert jobs[0].url == payload[0]["hostedUrl"]
+        assert jobs[0].is_remote
+        assert requested_urls == ["https://api.eu.lever.co/v0/postings/example?mode=json"]
+
+    def test_arbeitnow_adapter_allows_large_api_responses(self, monkeypatch):
+        adapter = ArbeitnowAdapter()
+        payload = {
+            "data": [{
+                "slug": "cloud-engineer-example",
+                "title": "Cloud Engineer",
+                "company_name": "Global Example",
+                "location": "Remote - Worldwide",
+                "description": "Cloud infrastructure role",
+                "url": "https://arbeitnow.example/jobs/cloud-engineer",
+            }]
+        }
+        requested_limits = []
+
+        def fake_fetch_url(url, timeout=5, max_bytes=512 * 1024):
+            requested_limits.append(max_bytes)
+            return 200, json.dumps(payload).encode("utf-8")
+
+        monkeypatch.setattr(adapter, "fetch_url", fake_fetch_url)
+
+        jobs = adapter.fetch(query_roles=["Cloud Engineer"])
+
+        assert len(jobs) == 1
+        assert jobs[0].source == "arbeitnow"
+        assert requested_limits == [4 * 1024 * 1024]
+
+    def test_we_work_remotely_preserves_country_restrictions(self, monkeypatch):
+        adapter = WeWorkRemotelyAdapter()
+        feed = (
+            "<rss><channel><item>"
+            "<title><![CDATA[Smartsheet: DevOps Engineer (Remote Eligible in Bulgaria)]]></title>"
+            "<link>https://weworkremotely.example/jobs/smartsheet-devops</link>"
+            "<description><![CDATA[Remote role for eligible applicants in Bulgaria.]]></description>"
+            "</item></channel></rss>"
+        )
+        monkeypatch.setattr(
+            adapter,
+            "fetch_url",
+            lambda url, timeout=5: (200, feed.encode("utf-8")) if "remote-devops" in url else (404, b""),
+        )
+
+        jobs = adapter.fetch()
+
+        assert len(jobs) == 1
+        assert jobs[0].location == "Remote - Bulgaria"
+        assert not evaluate_opportunity_eligibility(jobs[0]).is_eligible
+        sponsored = {
+            "title": jobs[0].title,
+            "location": jobs[0].location,
+            "description": jobs[0].description + " Visa sponsorship is offered.",
+        }
+        assert evaluate_opportunity_eligibility(sponsored).is_eligible
 
 
 # ============================================================================
@@ -290,13 +617,19 @@ class TestEligibilityFilterF09:
         "Remote - EMEA",
         "Remote - Europe (CET Timezone)",
         "Remote - Africa / Lagos, Nigeria",
-        "Anywhere (Synchronous with EMEA)",
+        "Remote from anywhere (Synchronous with EMEA)",
+        "Remote from Nigeria (UTC+1)",
     ])
     def test_positive_remote_locations_eligible(self, loc_str):
         assert is_remote_eligible(loc_str) is True
 
     def test_case_insensitive_worldwide_remote_eligibility(self):
         assert is_remote_eligible("REMOTE - WORK FROM ANYWHERE (WORLDWIDE)") is True
+
+    def test_timezone_or_geography_without_remote_work_is_not_eligible(self):
+        assert is_remote_eligible("Anywhere (Synchronous with EMEA)") is False
+        assert is_remote_eligible("Global role; UTC+1; CET synchronous") is False
+        assert is_remote_eligible("Lagos, Nigeria") is False
 
     @pytest.mark.parametrize("disqualifier_text", [
         "Remote - US Citizen Only (W2 Only)",
@@ -317,6 +650,13 @@ class TestEligibilityFilterF09:
 
     def test_visa_sponsorship_negative_detection(self):
         text = "Candidate must have existing work authorization; no visa sponsorship will be provided."
+        assert detect_visa_sponsorship(text) is False
+
+    @pytest.mark.parametrize("text", [
+        "Relocation support and temporary housing are offered.",
+        "The company provides relocation assistance for successful candidates.",
+    ])
+    def test_relocation_benefits_alone_do_not_prove_visa_sponsorship(self, text):
         assert detect_visa_sponsorship(text) is False
 
     def test_contract_consultancy_c2c_detection(self):
@@ -384,11 +724,139 @@ class TestEligibilityFilterF09:
         assert res.visa_sponsorship is True
         assert res["remote_eligible_nigeria"] is True
 
+    def test_us_hybrid_internship_is_not_eligible_from_incidental_remote_or_relocation_text(self):
+        job = {
+            "title": "2027 - Software Engineering Intern, AMER",
+            "company": "MongoDB",
+            "location": "Austin; New York City; San Francisco",
+            "description": (
+                "This is a 12-week internship. Must be authorized to work in the United States. "
+                "Interns work in the office 3-5 days a week. Relocation support is available, "
+                "and the program includes remote gatherings."
+            ),
+            "is_remote": False,
+        }
+
+        result = evaluate_opportunity_eligibility(job)
+
+        assert result.is_eligible is False
+        assert result.remote_eligible_nigeria is False
+        assert result.visa_sponsorship is False
+        assert any("Internship or co-op" in reason for reason in result.disqualification_reasons)
+
+    def test_incidental_remote_description_does_not_make_an_onsite_job_remote(self):
+        job = JobOpportunity(
+            title="Cloud Infrastructure Engineer",
+            company="Example",
+            location="Austin, Texas",
+            description="The team meets at remote gatherings after work.",
+            is_remote=False,
+        )
+
+        result = evaluate_opportunity_eligibility(job)
+
+        assert result.is_eligible is False
+        assert result.remote_eligible_nigeria is False
+        assert result.status == "neutral"
+        assert result.mobility_score == 60.0
+
+    def test_one_day_remote_option_does_not_qualify_as_fully_remote(self):
+        job = JobOpportunity(
+            title="Cloud Infrastructure Engineer",
+            company="Example",
+            location="Gilching, Bayern, Germany",
+            description="Employees may work remotely one flexible day per week.",
+            is_remote=False,
+        )
+
+        result = evaluate_opportunity_eligibility(job)
+
+        assert result.is_eligible is False
+        assert result.remote_eligible_nigeria is False
+
+    def test_explicit_remote_description_without_location_is_eligible(self):
+        job = {
+            "title": "Cloud Infrastructure Engineer",
+            "company": "Example",
+            "location": "",
+            "description": "This is a fully remote position available worldwide.",
+        }
+
+        result = evaluate_opportunity_eligibility(job)
+
+        assert result.is_eligible is True
+        assert result.remote_eligible_nigeria is True
+
+    def test_provider_remote_flag_does_not_override_country_restriction(self):
+        job = {
+            "title": "Cloud Infrastructure Engineer",
+            "company": "Example",
+            "location": "Austin, Texas",
+            "description": "Build cloud infrastructure.",
+            "is_remote": True,
+        }
+
+        result = evaluate_opportunity_eligibility(job)
+
+        assert result.is_eligible is False
+        assert result.remote_eligible_nigeria is False
+
+    @pytest.mark.parametrize("location", [
+        "United States (Remote)",
+        "USA / Remote",
+        "Canada (Remote)",
+    ])
+    def test_country_before_remote_label_is_not_worldwide_eligible(self, location):
+        job = {
+            "title": "Cloud Infrastructure Engineer",
+            "company": "Example",
+            "location": location,
+            "description": "Build cloud infrastructure.",
+            "is_remote": True,
+        }
+
+        result = evaluate_opportunity_eligibility(job)
+
+        assert result.is_eligible is False
+        assert result.remote_eligible_nigeria is False
+
+    def test_country_restricted_remote_role_can_still_be_eligible_by_sponsorship(self):
+        job = {
+            "title": "Cloud Infrastructure Engineer",
+            "company": "Example",
+            "location": "United States (Remote)",
+            "description": "US work visa sponsorship is available.",
+            "is_remote": True,
+        }
+
+        result = evaluate_opportunity_eligibility(job)
+
+        assert result.is_eligible is True
+        assert result.remote_eligible_nigeria is False
+        assert result.visa_sponsorship is True
+
     def test_categorize_opportunity_dict(self):
         job = {"title": "DevOps", "location": "Worldwide Remote", "description": "100% remote"}
         cat = categorize_opportunity(job)
         assert isinstance(cat, dict)
         assert cat["is_eligible"] is True
+
+    def test_contract_or_fellowship_does_not_bypass_remote_or_visa_requirements(self):
+        on_site_contract = JobOpportunity(
+            title="Cloud Consultant",
+            company="Acme",
+            location="Lagos, Nigeria",
+            description="B2B consultancy engagement; on-site role.",
+        )
+        on_site_fellowship = JobOpportunity(
+            title="Cloud Research Fellowship",
+            company="Acme",
+            location="London, UK",
+            description="Research fellowship for cloud infrastructure specialists.",
+        )
+
+        assert evaluate_opportunity_eligibility(on_site_contract).is_eligible is False
+        assert evaluate_opportunity_eligibility(on_site_fellowship).is_eligible is False
 
 
 # ============================================================================
@@ -579,6 +1047,33 @@ class TestEligibilityHardeningF09:
         assert res.disqualified is True
         assert res.remote_eligible_nigeria is False
         assert res.is_eligible is False
+
+    @pytest.mark.parametrize("location", [
+        "Remote, AMER",
+        "Remote, APAC",
+        "Remote - Japan",
+        "Remote (Asia Pacific)",
+    ])
+    def test_remote_restricted_to_incompatible_regions_is_rejected(self, location):
+        job = JobOpportunity(
+            title="Support Engineer",
+            company="Example",
+            location=location,
+            description="Remote support role",
+        )
+        result = evaluate_opportunity_eligibility(job)
+        assert result.is_eligible is False
+        assert result.remote_eligible_nigeria is False
+
+    def test_remote_emea_and_global_roles_remain_eligible(self):
+        for location in ("Remote, EMEA", "Remote, Global"):
+            result = evaluate_opportunity_eligibility(JobOpportunity(
+                title="Cloud Engineer",
+                company="Example",
+                location=location,
+            ))
+            assert result.is_eligible is True
+            assert result.remote_eligible_nigeria is True
 
     @pytest.mark.parametrize("contract_text", [
         "No 1099 permitted.",

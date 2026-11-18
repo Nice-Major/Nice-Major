@@ -104,8 +104,8 @@ def synthetic_sample_job() -> Dict[str, Any]:
 class TestConcurrencyAndDuplicateRunStress:
     """Rigorous empirical validation of idempotency, force override, and log recovery."""
 
-    def test_sequential_duplicate_runs_idempotency(self, tmp_path):
-        """Sequential runs on the same date: run 1 succeeds, run 2 is skipped without disk mutations."""
+    def test_sequential_dry_runs_are_not_recorded_as_live_dispatches(self, tmp_path):
+        """Repeated dry-run exports must not mark the day as live-dispatched."""
         test_date = "2026-12-01"
         out_dir = tmp_path / "idempotency_run"
         out_dir.mkdir(parents=True, exist_ok=True)
@@ -116,17 +116,17 @@ class TestConcurrencyAndDuplicateRunStress:
         eml_files_1 = list(out_dir.rglob("*.eml"))
         assert len(eml_files_1) == 1
 
-        # Second execution: idempotency skip
+        # The second run exports again because no live delivery took place.
         res2 = run_daily_job(dry_run=True, date_str=test_date, output_dir=str(out_dir), force=False)
-        assert res2["status"] == "skipped"
-        assert f"Already dispatched on {test_date}" in res2["reason"]
+        assert res2["status"] == "success"
 
-        # Assert no new .eml file created
+        # Assert a second .eml was produced and no live dispatch record exists.
         eml_files_2 = list(out_dir.rglob("*.eml"))
-        assert len(eml_files_2) == 1
+        assert len(eml_files_2) == 2
+        assert not (out_dir / "state" / "dispatch_log.json").exists()
 
     def test_force_flag_allows_reexecution_with_unique_artifacts(self, tmp_path):
-        """Force flag allows repeated execution on the same date while recording multiple history entries."""
+        """Force flag allows repeated dry-run exports without recording live dispatches."""
         test_date = "2026-12-02"
         out_dir = tmp_path / "force_run"
         out_dir.mkdir(parents=True, exist_ok=True)
@@ -145,15 +145,11 @@ class TestConcurrencyAndDuplicateRunStress:
         eml_files = list(out_dir.rglob("*.eml"))
         assert len(eml_files) == 3
 
-        # Unforced subsequent run still skips
+        # Unforced dry-run also exports because no live dispatch has been recorded.
         res4 = run_daily_job(dry_run=True, date_str=test_date, output_dir=str(out_dir), force=False)
-        assert res4["status"] == "skipped"
-
-        # Log inspection
-        log_file = out_dir / "dispatch_log.json"
-        with open(log_file, "r", encoding="utf-8") as f:
-            records = json.load(f)
-        assert len(records) == 3
+        assert res4["status"] == "success"
+        assert len(list(out_dir.rglob("*.eml"))) == 4
+        assert not (out_dir / "state" / "dispatch_log.json").exists()
 
     def test_corrupted_dispatch_log_recovery_and_reconstruction(self, tmp_path):
         """Verify resilience against malformed, partially-written, or non-array dispatch logs."""
@@ -245,8 +241,8 @@ class TestMIMEComplianceBytesParser:
         content = alt_body.get_content()
         assert "No Opportunities Discovered Today" in content or "0 Opportunities" in str(parsed["Subject"])
 
-    def test_bytesparser_body_extraction_and_executive_metrics(self, synthetic_sample_job, synthetic_profile_dict):
-        """Verify both plain and html bodies can be extracted cleanly and contain required metrics."""
+    def test_bytesparser_body_extraction_uses_only_profile_metrics(self, synthetic_sample_job, synthetic_profile_dict):
+        """Verify formatted bodies preserve profile identity without inventing KPIs."""
         msg = build_digest_email([synthetic_sample_job], candidate=synthetic_profile_dict)
         raw_eml = msg.as_bytes()
 
@@ -257,16 +253,16 @@ class TestMIMEComplianceBytesParser:
         text_body = parsed.get_body(preferencelist=("plain",))
         assert text_body is not None
         text_content = text_body.get_content()
-        assert "99.9%" in text_content
-        assert "99%" in text_content
+        assert "99.9%" not in text_content
+        assert "99%" not in text_content
         assert "John Victor Aniekwe" in text_content
 
         # Extract html part
         html_body = parsed.get_body(preferencelist=("html",))
         assert html_body is not None
         html_content = html_body.get_content()
-        assert "99.9%" in html_content
-        assert "99%" in html_content
+        assert "99.9%" not in html_content
+        assert "99%" not in html_content
         assert "John Victor Aniekwe" in html_content
         assert "<link" not in html_content.lower()
 

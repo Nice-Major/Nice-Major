@@ -21,6 +21,8 @@ def generate_daily_workflow_review(
     tenders_matched: int = 0,
     date_str: Optional[str] = None,
     output_dir: Optional[Path] = None,
+    role_feedback: Optional[Dict[str, Any]] = None,
+    role_preference_adjustments: Optional[Dict[str, float]] = None,
 ) -> Dict[str, Any]:
     """
     Analyzes the daily pipeline execution and produces a structured self-optimization report.
@@ -62,8 +64,7 @@ def generate_daily_workflow_review(
         )
     else:
         recommendations.append(
-            "Skill-Matrix Coverage: 100% keyword saturation achieved across today's top postings "
-            "(including Cloud, Kubernetes KCNA, AI/LLM, and Cisco CyberOps competencies)."
+            "Skill-Matrix Review: No recurring skill gaps appeared in today's sample; this does not prove full coverage."
         )
 
     if len(high_matches) > 3:
@@ -81,8 +82,26 @@ def generate_daily_workflow_review(
     recommendations.append(
         "Fast-Track URL & Paste Ingestion: Drop any new Workday/Greenhouse/Lever URL or raw JD into "
         "`data/paste_job_here.txt` and run `python cli/main.py apply` (or `python cli/main.py apply --url <URL>`) "
-        "to generate a 2-page PDF CV and 1-page PDF Cover Letter in <5 seconds."
+        "to generate an editable Markdown source and matching PDF CV and cover letter."
     )
+
+    feedback_roles = (role_feedback or {}).get("roles", {})
+    feedback_totals = {
+        outcome: sum(counts.get(outcome, 0) for counts in feedback_roles.values())
+        for outcome in ("interested", "not_interested", "applied", "interview", "rejected", "offer")
+    }
+    if any(feedback_totals.values()):
+        recommendations.append(
+            "Candidate Feedback: "
+            + ", ".join(f"{outcome}={count}" for outcome, count in feedback_totals.items() if count)
+            + ". Interest feedback only affects role ordering after three votes for that role, capped at +/-5 points; "
+            "application outcomes inform the review but never alter profile facts."
+        )
+    else:
+        recommendations.append(
+            "Candidate Feedback: No explicit feedback recorded yet. Use the Career Feedback workflow or "
+            "`python cli/main.py feedback --role \"Cloud Engineer\" --outcome interested`."
+        )
 
     review_data = {
         "date": active_date,
@@ -94,6 +113,8 @@ def generate_daily_workflow_review(
         "stepcon_tenders_matched": tenders_matched,
         "top_matched_competencies": top_matches,
         "recurring_market_skill_gaps": top_gaps,
+        "candidate_feedback": feedback_roles,
+        "role_preference_adjustments": role_preference_adjustments or {},
         "optimization_recommendations": recommendations,
     }
 
@@ -111,19 +132,37 @@ def generate_daily_workflow_review(
         "",
         "## 2. Market Competency & Skill-Gap Intelligence",
         f"- **Top Matched Candidate Skills Today:** {', '.join(top_matches) if top_matches else 'N/A'}",
-        f"- **Recurring Market Skill Gaps Detected:** {', '.join(top_gaps) if top_gaps else 'None (100% Coverage)'}",
+        f"- **Recurring Market Skill Gaps Detected:** {', '.join(top_gaps) if top_gaps else 'None observed in this sample'}",
         "",
-        "## 3. Automated Workflow Improvement Actions",
+        "## 3. Candidate Feedback",
     ]
+    if feedback_roles:
+        for role, counts in sorted(feedback_roles.items()):
+            vote_count = counts.get("interested", 0) + counts.get("not_interested", 0)
+            adjustment = (role_preference_adjustments or {}).get(role, 0.0)
+            md_lines.append(
+                f"- **{role}:** {', '.join(f'{outcome}={count}' for outcome, count in sorted(counts.items()))}; "
+                f"ranking adjustment: {adjustment:+.1f} (interest votes: {vote_count})"
+            )
+    else:
+        md_lines.append("- No explicit feedback recorded.")
+    md_lines.extend([
+        "",
+        "Feedback influences ordering only after three explicit interest votes for a role; "
+        "application outcomes are reported but do not modify candidate profile facts.",
+        "",
+        "## 4. Workflow Improvement Actions",
+    ])
     for idx, rec in enumerate(recommendations, 1):
         md_lines.append(f"{idx}. {rec}")
 
     if tailored_packages:
-        md_lines.extend(["", "## 4. Opportunity-Tied PDF Application Files Generated Today"])
+        md_lines.extend(["", "## 5. Opportunity-Tied Editable Application Files Generated Today"])
         for pkg in tailored_packages:
             md_lines.append(
                 f"- **{pkg.get('title')} — {pkg.get('company')} ({pkg.get('score', 0):.1f}%):** "
-                f"`{pkg.get('cv_filename')}` & `{pkg.get('letter_filename')}`"
+                f"`{pkg.get('cv_filename')}`, `{pkg.get('letter_filename')}`, "
+                f"`{pkg.get('cv_md_filename')}`, `{pkg.get('letter_md_filename')}`"
             )
 
     md_report = "\n".join(md_lines) + "\n"
@@ -164,10 +203,13 @@ def run_workflow_audit(
     from discovery.sources import fetch_opportunities
     from engine.scorer import evaluate_job
     from ingestion.parser import load_profile
+    from scheduler.workflow_feedback import load_role_feedback, role_preference_adjustments
 
-    active_profile = profile or load_profile(allow_fallback=True)
+    active_profile = profile or load_profile()
     active_settings = get_settings()
     out_dir = output_dir or active_settings.output_dir
+    feedback = load_role_feedback(Path(out_dir) / "state" / "role_feedback.json")
+    preference_adjustments = role_preference_adjustments(feedback)
 
     raw_opps = fetch_opportunities(dry_run=True)
     eligible_opps = filter_opportunities(raw_opps, candidate=active_profile)
@@ -182,6 +224,18 @@ def run_workflow_audit(
         text = f"{title} | {loc}\n\n{desc}" if desc else title
         res = evaluate_job(active_profile, text)
         scored_items.append((opp, res))
+
+    scored_items.sort(
+        key=lambda item: (
+            item[1].overall_score + preference_adjustments.get(item[1].target_role, 0.0),
+            item[1].overall_score,
+        ),
+        reverse=True,
+    )
+
+    for opp, res in scored_items:
+        title = getattr(opp, "title", "") or (opp.get("title", "") if isinstance(opp, dict) else "")
+        company = getattr(opp, "company", "") or (opp.get("company", "") if isinstance(opp, dict) else "")
         if res.overall_score >= 75.0:
             tailored_pkgs.append({
                 "title": title,
@@ -198,6 +252,8 @@ def run_workflow_audit(
         tenders_matched=len(tenders),
         date_str=date_str,
         output_dir=out_dir,
+        role_feedback=feedback,
+        role_preference_adjustments=preference_adjustments,
     )
     return WorkflowAuditReport(review_dict)
 
