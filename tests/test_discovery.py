@@ -548,6 +548,62 @@ class TestDiscoverySourcesF08:
         assert jobs[0].is_remote
         assert requested_urls == ["https://api.eu.lever.co/v0/postings/example?mode=json"]
 
+    def test_lever_remote_country_restriction_is_preserved(self, monkeypatch):
+        adapter = CompanyBoardAdapter("lever", "Lever", "LEVER_SITE_NAMES")
+        monkeypatch.setattr("discovery.sources.load_curated_board_entries", lambda source_id: [])
+        payload = [{
+            "id": "posting-fr",
+            "text": "DevOps Engineer",
+            "categories": {"location": "Remote"},
+            "descriptionPlain": "Build cloud infrastructure and CI/CD systems.",
+            "hostedUrl": "https://jobs.lever.co/example/posting-fr",
+            "workplaceType": "remote",
+            "country": "FR",
+        }]
+        monkeypatch.setenv("LEVER_SITE_NAMES", "example")
+        monkeypatch.setattr(
+            adapter,
+            "fetch_url",
+            lambda url, timeout=5, max_bytes=COMPANY_BOARD_MAX_RESPONSE_BYTES: (
+                200,
+                json.dumps(payload).encode("utf-8"),
+            ),
+        )
+
+        jobs = adapter.fetch(query_roles=["DevOps Engineer"])
+
+        assert len(jobs) == 1
+        assert jobs[0].location == "Remote - France"
+        assert not evaluate_opportunity_eligibility(jobs[0]).is_eligible
+
+    def test_lever_explicit_worldwide_remote_is_not_narrowed_by_country_metadata(self, monkeypatch):
+        adapter = CompanyBoardAdapter("lever", "Lever", "LEVER_SITE_NAMES")
+        monkeypatch.setattr("discovery.sources.load_curated_board_entries", lambda source_id: [])
+        payload = [{
+            "id": "posting-worldwide",
+            "text": "DevOps Engineer",
+            "categories": {"location": "Remote - Worldwide"},
+            "descriptionPlain": "Build cloud infrastructure and CI/CD systems.",
+            "hostedUrl": "https://jobs.lever.co/example/posting-worldwide",
+            "workplaceType": "remote",
+            "country": "FR",
+        }]
+        monkeypatch.setenv("LEVER_SITE_NAMES", "example")
+        monkeypatch.setattr(
+            adapter,
+            "fetch_url",
+            lambda url, timeout=5, max_bytes=COMPANY_BOARD_MAX_RESPONSE_BYTES: (
+                200,
+                json.dumps(payload).encode("utf-8"),
+            ),
+        )
+
+        jobs = adapter.fetch(query_roles=["DevOps Engineer"])
+
+        assert len(jobs) == 1
+        assert jobs[0].location == "Remote - Worldwide"
+        assert evaluate_opportunity_eligibility(jobs[0]).is_eligible
+
     def test_arbeitnow_adapter_allows_large_api_responses(self, monkeypatch):
         adapter = ArbeitnowAdapter()
         payload = {

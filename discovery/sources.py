@@ -34,6 +34,12 @@ JOBICY_MAX_RESPONSE_BYTES = 2 * 1024 * 1024
 COMPANY_BOARD_MAX_RESPONSE_BYTES = 10 * 1024 * 1024
 MAX_COMPANY_BOARDS_PER_SOURCE = 20
 COMPANY_BOARD_CATALOG_PATH = Path(__file__).resolve().parent.parent / "data" / "company-boards.json"
+LEVER_COUNTRY_NAMES = {
+    "fr": "France",
+    "ng": "Nigeria",
+    "gb": "United Kingdom",
+    "us": "United States",
+}
 
 CANONICAL_TARGET_ROLES: List[str] = [
     "Cloud Solutions Architect",
@@ -884,6 +890,15 @@ class CompanyBoardAdapter(BaseSourceAdapter):
                         )
                         posting_url = item.get("hostedUrl", item.get("applyUrl", ""))
                         is_remote = str(item.get("workplaceType", "")).casefold() == "remote"
+                        country = item.get("country")
+                        if isinstance(country, dict):
+                            country = country.get("name") or country.get("code")
+                        country = str(country or "").strip()
+                        if country and is_remote:
+                            country_name = LEVER_COUNTRY_NAMES.get(country.casefold(), country)
+                            location_text = str(location_value or "").strip()
+                            if not re.search(r"\b(?:worldwide|anywhere|global)\b", location_text, re.IGNORECASE):
+                                location_value = f"Remote - {country_name}"
                         posted_date = item.get("createdAt", item.get("updatedAt", ""))
                     else:
                         title = item.get("title", "")
