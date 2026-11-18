@@ -11,6 +11,7 @@ with robust zero-network synthetic fallback when running in dry-run or offline m
 from __future__ import annotations
 
 import hashlib
+from html import unescape
 import json
 import logging
 import os
@@ -20,6 +21,7 @@ from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Set, Tuple, Union
 from urllib.error import HTTPError, URLError
+from urllib.parse import urljoin, urlparse
 from urllib.request import Request, urlopen
 
 from config.settings import load_dotenv_file, settings
@@ -33,6 +35,8 @@ ARBEITNOW_MAX_RESPONSE_BYTES = 4 * 1024 * 1024
 JOBICY_MAX_RESPONSE_BYTES = 2 * 1024 * 1024
 COMPANY_BOARD_MAX_RESPONSE_BYTES = 10 * 1024 * 1024
 MAX_COMPANY_BOARDS_PER_SOURCE = 20
+MAX_GENERIC_RSS_FEEDS = 20
+MAX_GENERIC_RSS_ITEMS_PER_FEED = 100
 COMPANY_BOARD_CATALOG_PATH = Path(__file__).resolve().parent.parent / "data" / "company-boards.json"
 LEVER_COUNTRY_NAMES = {
     "fr": "France",
@@ -973,12 +977,41 @@ def _filter_roles(
 
 
 class RssFeedAdapter(BaseSourceAdapter):
-    """Adapter for arbitrary generic RSS/Atom feeds."""
+    """Adapter for candidate-configured public RSS/Atom feeds."""
     source_id = "rss_feed"
     name = "Generic RSS/Atom Feed"
 
-    def __init__(self, feed_url: str = ""):
-        self.feed_url = feed_url
+    def __init__(self, feed_url: Union[str, List[str]] = ""):
+        configured_feeds = feed_url or _source_setting("RSS_JOB_FEED_URLS")
+        if isinstance(configured_feeds, str):
+            feed_urls = re.split(r"[,\r\n]+", configured_feeds)
+        else:
+            feed_urls = configured_feeds
+        self.feed_urls = [
+            url.strip()
+            for url in feed_urls
+            if isinstance(url, str) and url.strip()
+        ][:MAX_GENERIC_RSS_FEEDS]
+
+    @staticmethod
+    def _local_name(tag: str) -> str:
+        return tag.rsplit("}", 1)[-1].split(":")[-1].casefold()
+
+    @classmethod
+    def _child_value(cls, element: ET.Element, names: Set[str]) -> str:
+        for child in list(element):
+            if cls._local_name(child.tag) not in names:
+                continue
+            value = child.get("href", "") or " ".join(child.itertext())
+            if value.strip():
+                return value.strip()
+        return ""
+
+    @staticmethod
+    def _clean_description(value: str) -> str:
+        decoded = unescape(value)
+        without_tags = re.sub(r"<[^>]*>", " ", decoded)
+        return re.sub(r"\s+", " ", without_tags).strip()
 
     def fetch(
         self,
@@ -986,36 +1019,70 @@ class RssFeedAdapter(BaseSourceAdapter):
         limit: int = 20,
         timeout: int = 5,
     ) -> List[JobOpportunity]:
-        if not self.feed_url:
+        if limit <= 0 or not self.feed_urls:
             return []
-        status, body = self.fetch_url(self.feed_url, timeout=timeout)
-        if status != 200 or not body:
-            return []
-        try:
-            root = ET.fromstring(body)
-            opportunities: List[JobOpportunity] = []
-            for item in root.findall(".//item"):
-                title = item.findtext("title", "")
-                link = item.findtext("link", "")
-                description = item.findtext("description", "")
-                pub_date = item.findtext("pubDate", "")
-                opp = JobOpportunity(
-                    title=title,
-                    company="Feed Sponsor",
-                    location="Remote",
-                    description=description,
-                    url=link,
-                    source=self.source_id,
-                    posted_date=pub_date,
-                    is_remote=True,
+
+        per_feed_batches: List[List[JobOpportunity]] = []
+        for feed_url in self.feed_urls:
+            parsed_url = urlparse(feed_url)
+            if parsed_url.scheme not in {"http", "https"} or not parsed_url.netloc:
+                logger.warning("Skipping invalid public RSS/Atom feed URL: %s", feed_url)
+                continue
+
+            status, body = self.fetch_url(feed_url, timeout=timeout)
+            if status != 200 or not body:
+                logger.warning("RSS/Atom feed returned HTTP status %s: %s", status, feed_url)
+                continue
+
+            try:
+                root = ET.fromstring(body)
+            except ET.ParseError as exc:
+                logger.warning("RSS/Atom feed parsing failed for %s: %s", feed_url, exc)
+                continue
+
+            feed_jobs: List[JobOpportunity] = []
+            entries = [
+                element for element in root.iter()
+                if self._local_name(element.tag) in {"item", "entry"}
+            ][:MAX_GENERIC_RSS_ITEMS_PER_FEED]
+            for entry in entries:
+                title = self._child_value(entry, {"title"})
+                link = self._child_value(entry, {"link"})
+                if not title or not link:
+                    continue
+                posting_url = urljoin(feed_url, link)
+                parsed_posting_url = urlparse(posting_url)
+                if parsed_posting_url.scheme not in {"http", "https"} or not parsed_posting_url.netloc:
+                    continue
+                description = self._child_value(entry, {"description", "summary", "content", "encoded"})
+                company = self._child_value(
+                    entry,
+                    {"company", "employer", "organization", "hiringorganization"},
                 )
-                opportunities.append(opp)
-                if len(opportunities) >= limit:
+                location = self._child_value(entry, {"location", "joblocation", "worklocation"})
+                posted_date = self._child_value(entry, {"pubdate", "published", "updated", "date"})
+                feed_jobs.append(JobOpportunity(
+                    title=title,
+                    company=company or "Employer not specified",
+                    location=location or "Not specified",
+                    description=self._clean_description(description),
+                    url=posting_url,
+                    source=self.source_id,
+                    posted_date=posted_date,
+                    is_remote=bool(re.search(r"\bremote\b", location, re.IGNORECASE)),
+                ))
+                if len(feed_jobs) >= limit:
                     break
-            return _filter_roles(opportunities, query_roles)[:limit]
-        except Exception as e:
-            logger.debug(f"Generic RSS feed parse error: {e}")
-            return []
+            per_feed_batches.append(_filter_roles(feed_jobs, query_roles))
+
+        diversified: List[JobOpportunity] = []
+        for posting_index in range(max((len(batch) for batch in per_feed_batches), default=0)):
+            for batch in per_feed_batches:
+                if posting_index < len(batch):
+                    diversified.append(batch[posting_index])
+                    if len(diversified) >= limit:
+                        return diversified
+        return diversified
 
 
 class CompanyCareerPageAdapter(BaseSourceAdapter):
@@ -1099,6 +1166,7 @@ class AdapterRegistry:
         self.register(JobicyAdapter())
         self.register(RemotiveAdapter())
         self.register(ArbeitnowAdapter())
+        self.register(RssFeedAdapter())
         self.register(CompanyBoardAdapter("greenhouse", "Greenhouse Public Job Boards", "GREENHOUSE_BOARD_TOKENS"))
         self.register(CompanyBoardAdapter("lever", "Lever Public Job Boards", "LEVER_SITE_NAMES"))
         self.register(CompanyBoardAdapter("ashby", "Ashby Public Job Boards", "ASHBY_BOARD_NAMES"))

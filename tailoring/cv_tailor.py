@@ -190,6 +190,65 @@ def clean_certifications_for_ats(certifications: List[Certification]) -> List[st
     return cleaned
 
 
+def _format_work_preferences(categories: List[str]) -> List[str]:
+    """Translate profile mobility facts into concise recruiter-facing statements."""
+    formatted: List[str] = []
+    for category in categories:
+        normalized = category.casefold()
+        if "remote" in normalized and "nigeria" in normalized:
+            statement = "Remote roles: open to opportunities that accept candidates based in Nigeria."
+        elif "relocation" in normalized and (
+            "sponsor" in normalized or "work authorization" in normalized
+        ):
+            statement = "Relocation: open where employer-sponsored work authorization is available."
+        elif "b2b" in normalized and "stepcon" in normalized:
+            statement = "Consulting: B2B engagements through Stepcon Solutions."
+        else:
+            statement = category.strip().rstrip(".")
+        if statement and statement not in formatted:
+            formatted.append(statement)
+    return formatted
+
+
+def _unrepresented_kpi_metrics(
+    metrics: List[KpiMetric],
+    experience_list: List[Dict[str, Any]],
+) -> List[KpiMetric]:
+    """Keep achievement callouts only when their evidence is not already in experience."""
+    experience_parts: List[str] = []
+    for experience in experience_list:
+        experience_parts.extend([
+            str(experience.get("role", "")),
+            str(experience.get("company", "")),
+        ])
+        experience_parts.extend(
+            str(bullet if isinstance(bullet, str) else bullet.get("text", ""))
+            for bullet in experience.get("bullets", [])
+        )
+    experience_text = " ".join(experience_parts).casefold()
+    experience_text = re.sub(r"[^a-z0-9%]+", " ", experience_text)
+    experience_terms = set(re.findall(r"[a-z0-9]+", experience_text))
+
+    unique_metrics: List[KpiMetric] = []
+    for metric in metrics:
+        value = re.sub(r"[^a-z0-9%]+", " ", metric.value.casefold()).strip()
+        label_terms = {
+            term
+            for term in re.findall(r"[a-z0-9]+", metric.metric.casefold())
+            if len(term) >= 3
+        }
+        matching_label_terms = label_terms.intersection(experience_terms)
+        if (
+            value
+            and value in experience_text
+            and matching_label_terms
+            and len(matching_label_terms) >= min(2, len(label_terms))
+        ):
+            continue
+        unique_metrics.append(metric)
+    return unique_metrics
+
+
 # ============================================================================
 # 4. Markdown Generator (`.md`)
 # ============================================================================
@@ -219,11 +278,14 @@ def _generate_markdown_cv(
     if cand.portfolio:
         contact_parts.append(f"[Portfolio]({cand.portfolio})")
 
+    experience_list = lens.experience or [e.to_dict() for e in profile.experience]
+    unique_metrics = _unrepresented_kpi_metrics(profile.kpi_metrics, experience_list)
     is_domestic_nigeria = False
     if job_text:
         jl = job_text.lower()
         if any(term in jl for term in ["abuja", "lagos", "nigeria", "africa regional offices"]):
             is_domestic_nigeria = True
+    work_preferences = _format_work_preferences(cand.mobility_categories)
 
     lines: List[str] = [
         f"# {full_name}",
@@ -232,9 +294,12 @@ def _generate_markdown_cv(
         " | ".join(contact_parts),
         "",
     ]
-    if not is_domestic_nigeria and cand.mobility_categories:
+    if not is_domestic_nigeria and work_preferences:
         lines.extend([
-            f"> **Mobility:** {'; '.join(cand.mobility_categories)}",
+            "## Location & Work Preferences",
+            *[f"- {preference}" for preference in work_preferences],
+            "",
+            "---",
             "",
         ])
     lines.extend([
@@ -253,9 +318,9 @@ def _generate_markdown_cv(
             "",
         ])
 
-    if profile.kpi_metrics:
+    if unique_metrics:
         lines.extend(["## Selected Achievements"])
-        for metric in profile.kpi_metrics:
+        for metric in unique_metrics:
             metric_label = metric.metric.strip()
             context = metric.context.strip()
             label = f"{metric_label}: {context}" if metric_label and context else metric_label or context
@@ -277,7 +342,6 @@ def _generate_markdown_cv(
 
     # 4. Professional Experience
     lines.append("## Professional Experience")
-    experience_list = lens.experience or [e.to_dict() for e in profile.experience]
 
     for exp in experience_list:
         comp = exp.get("company", "")
@@ -352,17 +416,21 @@ def _generate_html_cv(
     headline = lens.headline or cand.commitment or lens.role_key or "Candidate"
     doc_title = f"{safe_filename(cand.first_name, cand.last_name, lens.role_key or 'DevOps', 'CV', 'html')}"
 
+    experience_list = lens.experience or [e.to_dict() for e in profile.experience]
+    unique_metrics = _unrepresented_kpi_metrics(profile.kpi_metrics, experience_list)
     is_domestic_nigeria = False
     if job_text:
         jl = job_text.lower()
         if any(term in jl for term in ["abuja", "lagos", "nigeria", "africa regional offices"]):
             is_domestic_nigeria = True
 
-    mobility_note_html = ""
-    if not is_domestic_nigeria and cand.mobility_categories:
-        mobility_note_html = (
-            '<div class="mobility-note"><strong>Mobility:</strong> '
-            f"{html.escape('; '.join(cand.mobility_categories))}</div>"
+    work_preferences = _format_work_preferences(cand.mobility_categories)
+    work_preferences_section_html = ""
+    if not is_domestic_nigeria and work_preferences:
+        work_preferences_section_html = (
+            '<section><h2>Location &amp; Work Preferences</h2><ul>'
+            + "".join(f"<li>{html.escape(preference)}</li>" for preference in work_preferences)
+            + "</ul></section>"
         )
 
     # Contact items
@@ -385,7 +453,7 @@ def _generate_html_cv(
     summary_body = f"<p>{html.escape(summary)}</p>" if summary else ""
     summary_section = f"<section><h2>Professional Summary</h2>{summary_body}</section>"
     kpis_li = []
-    for metric in profile.kpi_metrics:
+    for metric in unique_metrics:
         metric_label = metric.metric.strip()
         context = metric.context.strip()
         label = f"{metric_label}: {context}" if metric_label and context else metric_label or context
@@ -404,7 +472,6 @@ def _generate_html_cv(
             )
 
     # Professional Experience
-    experience_list = lens.experience or [e.to_dict() for e in profile.experience]
     exp_articles = []
     for exp in experience_list:
         comp = html.escape(exp.get("company", ""))
@@ -524,14 +591,6 @@ def _generate_html_cv(
       text-decoration: none;
       font-weight: 500;
     }}
-    .mobility-note {{
-      margin-top: 10px;
-      font-size: 11.5px;
-      color: #1D4ED8;
-      background: #EFF6FF;
-      padding: 6px 10px;
-      border-left: 3px solid #0F52BA;
-    }}
     section {{
       margin-bottom: 18px;
     }}
@@ -597,7 +656,6 @@ def _generate_html_cv(
       h1 {{ font-size: 16pt; margin-bottom: 2px; }}
       .role-headline {{ font-size: 10pt; margin-bottom: 4px; }}
       .contact-strip {{ font-size: 8.5pt; gap: 6px; }}
-      .mobility-note {{ margin-top: 5px; padding: 4px 8px; font-size: 8.2pt; }}
       section {{ margin-bottom: 8px; }}
       h2 {{ font-size: 9.8pt; margin: 8pt 0 4pt 0; padding-bottom: 2px; break-after: avoid; page-break-after: avoid; }}
       p, li {{ font-size: 8.7pt; line-height: 1.28; margin-bottom: 2.5px; }}
@@ -616,11 +674,12 @@ def _generate_html_cv(
       <div class="contact-strip">
         {" | ".join(contact_spans)}
       </div>
-{mobility_note_html}
     </header>
 
     <main>
       {summary_section}
+
+      {work_preferences_section_html}
 
       {f'<section><h2>Selected Achievements</h2><ul>{"".join(kpis_li)}</ul></section>' if kpis_li else ""}
 
@@ -672,11 +731,14 @@ def _generate_plain_text_cv(
     full_name = (cand.full_name or "Candidate").upper()
     headline = lens.headline or cand.commitment or lens.role_key or "Candidate"
 
+    experience_list = lens.experience or [e.to_dict() for e in profile.experience]
+    unique_metrics = _unrepresented_kpi_metrics(profile.kpi_metrics, experience_list)
     is_domestic_nigeria = False
     if job_text:
         jl = job_text.lower()
         if any(term in jl for term in ["abuja", "lagos", "nigeria", "africa regional offices"]):
             is_domestic_nigeria = True
+    work_preferences = _format_work_preferences(cand.mobility_categories)
 
     lines: List[str] = [
         full_name,
@@ -684,13 +746,14 @@ def _generate_plain_text_cv(
         f"{cand.location} | {cand.phone} | {cand.email}",
         f"LinkedIn: {cand.linked_in} | GitHub: {cand.github} | Portfolio: {cand.portfolio}",
     ]
-    if not is_domestic_nigeria and cand.mobility_categories:
-        lines.append(f"Mobility: {'; '.join(cand.mobility_categories)}")
+    if not is_domestic_nigeria and work_preferences:
+        lines.extend(["", "LOCATION & WORK PREFERENCES"])
+        lines.extend(f"- {preference}" for preference in work_preferences)
     if lens.summary.strip():
         lines.extend(["", "=" * 80, "PROFESSIONAL SUMMARY", "=" * 80, lens.summary.strip()])
-    if profile.kpi_metrics:
+    if unique_metrics:
         lines.extend(["", "=" * 80,         "SELECTED ACHIEVEMENTS", "=" * 80])
-        for metric in profile.kpi_metrics:
+        for metric in unique_metrics:
             metric_label = metric.metric.strip()
             context = metric.context.strip()
             label = f"{metric_label}: {context}" if metric_label and context else metric_label or context
@@ -714,7 +777,6 @@ def _generate_plain_text_cv(
         "PROFESSIONAL EXPERIENCE",
         "=" * 80,
     ])
-    experience_list = lens.experience or [e.to_dict() for e in profile.experience]
     for exp in experience_list:
         comp = exp.get("company", "")
         role = exp.get("role", "")

@@ -310,7 +310,7 @@ def get_embedded_default_profile() -> Dict[str, Any]:
                 "headline": "Cloud Solutions Architect | Enterprise Multi-Cloud, Kubernetes & High-Availability Systems",
                 "summary": (
                     "Enterprise Cloud Solutions Architect specializing in resilient, multi-cloud topologies across AWS and Azure. "
-                    "Proven track record delivering 99.9% uptime SLAs, scalable Kubernetes container orchestration, and automated governance."
+                    "Designs scalable Kubernetes container platforms and automated governance."
                 ),
             },
             "infra": {
@@ -339,10 +339,10 @@ def get_embedded_default_profile() -> Dict[str, Any]:
                     "IT Specialist / Administrator",
                     "Support Escalation Engineer",
                 ],
-                "headline": "L3 Technical Support & Cloud Escalation Lead | 99% First-Day RCA Resolution",
+                "headline": "L3 Technical Support & Cloud Escalation Lead | Azure, Linux & Incident Response",
                 "summary": (
                     "Technical Support and Cloud Escalation Engineer with extensive experience resolving mission-critical "
-                    "L3 incidents across enterprise Microsoft Azure App Service environments. Achieved verified 99% same-day RCA resolution rate."
+                    "L3 incidents across enterprise Microsoft Azure App Service environments."
                 ),
             },
         },

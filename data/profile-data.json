@@ -163,7 +163,7 @@
         "Site Reliability Engineer (SRE)"
       ],
       "headline": "DevOps Engineer & Cloud Architect | AWS, Azure, Kubernetes, CI/CD & Infrastructure as Code",
-      "summary": "DevOps and AI Platform Engineer with 5+ years of experience building and operating cloud environments across AWS and Microsoft Azure. Focus areas include Kubernetes and container platforms, Terraform and ARM/Bicep infrastructure as code, CI/CD, Linux systems, automation, and cloud operations. Recent work includes supporting a Growth Intelligence platform with an AI prediction success rate above 60%. Reported outcomes include 99.9% enterprise Azure uptime, a 99% first-day L3 resolution rate, and reducing multi-environment provisioning from hours to under 15 minutes."
+      "summary": "DevOps and AI Platform Engineer with 5+ years of experience building and operating cloud environments across AWS and Microsoft Azure. Focus areas include Kubernetes and container platforms, Terraform and ARM/Bicep infrastructure as code, CI/CD, Linux systems, automation, and cloud operations."
     },
     "architect": {
       "categoryTitle": "Cloud Solutions Architect & Cloud Engineer",
@@ -174,7 +174,7 @@
         "AI Cloud Architect"
       ],
       "headline": "Cloud Solutions Architect | Multi-Cloud Infrastructure, Microservices & AI Platform Design",
-      "summary": "Solution-oriented Cloud Architect with 5+ years of experience designing secure, scalable, and cost-optimized cloud platforms across AWS and Microsoft Azure for enterprise and fintech workloads. Adept at leading architectural decisions across containerized microservices (AKS, EKS, ECS, ACA), hybrid cloud networking (VPCs, VNets, VPN Gateways, Private Endpoints), Infrastructure as Code (Terraform, ARM/Bicep), and production Azure OpenAI / ML inference pipelines. Proven ability to align system design with FinOps cost efficiency, DevSecOps governance, and 99.9% availability SLAs."
+      "summary": "Solution-oriented Cloud Architect with 5+ years of experience designing secure, scalable, and cost-optimized cloud platforms across AWS and Microsoft Azure for enterprise and fintech workloads. Adept at leading architectural decisions across containerized microservices (AKS, EKS, ECS, ACA), hybrid cloud networking (VPCs, VNets, VPN Gateways, Private Endpoints), Infrastructure as Code (Terraform, ARM/Bicep), and production Azure OpenAI / ML inference pipelines. Aligns system design with FinOps cost efficiency and DevSecOps governance."
     },
     "infra": {
       "categoryTitle": "Cloud Infrastructure Engineer & Linux System Administrator",
@@ -185,7 +185,7 @@
         "Hybrid Cloud Administrator"
       ],
       "headline": "Cloud Infrastructure & Linux Systems Engineer | AWS, Azure, Hybrid Networking & Reliability",
-      "summary": "Hands-on Cloud Infrastructure Engineer and Linux/Windows System Administrator with 5+ years of experience administering mission-critical compute, storage, virtualization, and hybrid network topologies across AWS and Microsoft Azure. Specialized in Linux/Ubuntu Server and Windows Server administration, CPU/memory/kernel performance tuning, VPC/VNet routing and security groups/NSGs, automated OS patching, vulnerability compliance, and disaster recovery operations sustaining 99.9% enterprise uptime."
+      "summary": "Hands-on Cloud Infrastructure Engineer and Linux/Windows System Administrator with 5+ years of experience administering mission-critical compute, storage, virtualization, and hybrid network topologies across AWS and Microsoft Azure. Specialized in Linux/Ubuntu Server and Windows Server administration, CPU/memory/kernel performance tuning, VPC/VNet routing and security groups/NSGs, automated OS patching, vulnerability compliance, and disaster recovery operations."
     },
     "support": {
       "categoryTitle": "L3 Technical Support Engineer & IT Specialist",
@@ -196,7 +196,7 @@
         "Application Support Engineer"
       ],
       "headline": "Technical Cloud Support Engineer (L3) & Enterprise IT Infrastructure Specialist",
-      "summary": "Customer-focused L3 Cloud Application Support Engineer and IT Infrastructure Specialist with 5+ years of experience diagnosing and resolving production issues across Microsoft Azure, AWS, Linux/Ubuntu, Windows Server, and containerized environments. Reported outcomes include a 99% first-day L3 resolution rate and 99.9% uptime for enterprise Azure customers. Experienced in incident workflows, troubleshooting guides, engineering knowledge bases, and root-cause analysis using logs, metrics, and traces."
+      "summary": "Customer-focused L3 Cloud Application Support Engineer and IT Infrastructure Specialist with 5+ years of experience diagnosing and resolving production issues across Microsoft Azure, AWS, Linux/Ubuntu, Windows Server, and containerized environments. Experienced in incident workflows, troubleshooting guides, engineering knowledge bases, and root-cause analysis using logs, metrics, and traces."
     }
   },
   "skillsMatrix": [

@@ -40,6 +40,7 @@ from discovery.sources import (
     ArbeitnowAdapter,
     JobicyAdapter,
     CompanyBoardAdapter,
+    RssFeedAdapter,
     load_curated_board_entries,
     COMPANY_BOARD_MAX_RESPONSE_BYTES,
     JOBICY_MAX_RESPONSE_BYTES,
@@ -656,6 +657,79 @@ class TestDiscoverySourcesF08:
             "description": jobs[0].description + " Visa sponsorship is offered.",
         }
         assert evaluate_opportunity_eligibility(sponsored).is_eligible
+
+    def test_generic_rss_adapter_parses_rss_and_atom_feeds(self, monkeypatch):
+        rss_feed = (
+            "<rss><channel><item>"
+            "<title>Cloud Engineer</title>"
+            "<link>/jobs/cloud-engineer</link>"
+            "<company>Example Cloud</company>"
+            "<location>Remote - Worldwide</location>"
+            "<description><![CDATA[<p>Build cloud infrastructure with Terraform.</p>]]></description>"
+            "<pubDate>Tue, 17 Nov 2026 10:00:00 GMT</pubDate>"
+            "</item></channel></rss>"
+        )
+        atom_feed = (
+            '<feed xmlns="http://www.w3.org/2005/Atom"><entry>'
+            "<title>DevOps Platform Engineer</title>"
+            '<link href="https://atom.example/jobs/platform"/>'
+            "<company>Atom Systems</company>"
+            "<location>Remote - EMEA</location>"
+            "<summary>Operate Kubernetes and CI/CD platforms.</summary>"
+            "<updated>2026-11-17T10:00:00Z</updated>"
+            "</entry></feed>"
+        )
+        feeds = {
+            "https://rss.example/jobs.xml": rss_feed.encode("utf-8"),
+            "https://atom.example/jobs.xml": atom_feed.encode("utf-8"),
+        }
+        adapter = RssFeedAdapter(list(feeds))
+        monkeypatch.setattr(
+            adapter,
+            "fetch_url",
+            lambda url, timeout=5: (200, feeds[url]),
+        )
+
+        jobs = adapter.fetch(query_roles=["Cloud Engineer", "DevOps Engineer"])
+
+        assert [job.company for job in jobs] == ["Example Cloud", "Atom Systems"]
+        assert jobs[0].url == "https://rss.example/jobs/cloud-engineer"
+        assert jobs[0].description == "Build cloud infrastructure with Terraform."
+        assert jobs[1].source == "rss_feed"
+        assert jobs[1].is_remote
+
+    def test_generic_rss_adapter_does_not_assume_unknown_location_is_remote(self, monkeypatch):
+        feed = (
+            "<rss><channel><item>"
+            "<title>Cloud Engineer</title>"
+            "<link>https://jobs.example/cloud-engineer</link>"
+            "<description>Build cloud infrastructure.</description>"
+            "</item></channel></rss>"
+        )
+        adapter = RssFeedAdapter("https://feeds.example/jobs.xml")
+        monkeypatch.setattr(adapter, "fetch_url", lambda url, timeout=5: (200, feed.encode("utf-8")))
+
+        jobs = adapter.fetch(query_roles=["Cloud Engineer"])
+
+        assert len(jobs) == 1
+        assert jobs[0].company == "Employer not specified"
+        assert jobs[0].location == "Not specified"
+        assert not jobs[0].is_remote
+        assert not evaluate_opportunity_eligibility(jobs[0]).is_eligible
+
+    def test_generic_rss_adapter_loads_multiple_feed_urls_from_config(self, monkeypatch):
+        monkeypatch.setenv(
+            "RSS_JOB_FEED_URLS",
+            "https://one.example/feed.xml,\nhttps://two.example/jobs.atom",
+        )
+
+        adapter = RssFeedAdapter()
+
+        assert adapter.feed_urls == [
+            "https://one.example/feed.xml",
+            "https://two.example/jobs.atom",
+        ]
+        assert registry.get("rss_feed") is not None
 
 
 # ============================================================================

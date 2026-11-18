@@ -77,6 +77,7 @@ jobs:
           GREENHOUSE_BOARD_TOKENS: ${{ vars.GREENHOUSE_BOARD_TOKENS || '' }}
           LEVER_SITE_NAMES: ${{ vars.LEVER_SITE_NAMES || '' }}
           ASHBY_BOARD_NAMES: ${{ vars.ASHBY_BOARD_NAMES || '' }}
+          RSS_JOB_FEED_URLS: ${{ vars.RSS_JOB_FEED_URLS || '' }}
         run: |
           if [ -n "$SMTP_PASSWORD" ] && [ "${{ github.event.inputs.dry_run }}" != "true" ]; then
             export DRY_RUN=false

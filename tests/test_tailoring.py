@@ -45,7 +45,7 @@ from ingestion.models import (
     StepconProfile,
     WorkExperience,
 )
-from ingestion.parser import load_profile_from_dict, get_embedded_default_profile
+from ingestion.parser import load_profile, load_profile_from_dict, get_embedded_default_profile
 from ingestion.text_utils import safe_filename, sanitize_ligatures, strip_markdown, clean_ats_text
 
 
@@ -238,6 +238,46 @@ class TestCvTailoringEngine:
         )
         assert "99.9%" in cv_md
         assert "99%" in cv_md or "<15" in cv_md or ">60%" in cv_md
+
+    def test_cv_avoids_repeating_experience_achievements_and_clarifies_work_preferences(self):
+        cv_mod = _get_cv_tailor_module()
+        profile = load_profile()
+
+        for output_format in ("md", "html", "txt"):
+            cv = cv_mod.generate_cv(
+                profile,
+                target_role="DevOps Engineer",
+                output_format=output_format,
+            )
+            normalized = cv.replace("&amp;", "&").replace("&gt;", ">").casefold()
+
+            assert "selected achievements" not in normalized
+            assert "99.9%" in normalized
+            assert "99%" in normalized
+            assert ">60%" in normalized
+            assert "under 15 minutes" in normalized
+            assert "location & work preferences" in normalized
+            assert "remote roles: open to opportunities that accept candidates based in nigeria." in normalized
+            assert "relocation: open where employer-sponsored work authorization is available." in normalized
+            assert "consulting: b2b engagements through stepcon solutions." in normalized
+
+    def test_cv_keeps_achievement_callout_when_not_repeated_in_experience(self):
+        cv_mod = _get_cv_tailor_module()
+        profile = CandidateProfile(
+            candidate=CandidateInfo(full_name="Taylor Example"),
+            kpi_metrics=[
+                KpiMetric(
+                    metric="Customer satisfaction improvement",
+                    value="12 points",
+                    context="Improved customer feedback scores.",
+                )
+            ],
+        )
+
+        cv_md = cv_mod.generate_cv(profile, target_role="Platform Engineer", output_format="md")
+
+        assert "Selected Achievements" in cv_md
+        assert "12 points" in cv_md
 
     def test_cv_format_case_insensitivity(self, default_candidate_profile, synthetic_devops_job):
         """Verifies that format parameter is case-insensitive ('MD', 'Html', 'TXT')."""
